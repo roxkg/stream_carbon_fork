@@ -58,10 +58,10 @@ def optimize_allocation_ga(
     hardware: str,
     workload: str,
     mapping: str,
-    mode: Literal["lbl"] | Literal["fused"],
+    mode: Literal["lbl"] | Literal["fused"], # two mode: layer by layer, layer fused
     layer_stacks: list[tuple[int, ...]],
-    nb_ga_generations: int,
-    nb_ga_individuals: int,
+    nb_ga_generations: int,   # number of individuals in each genetic algorithm generation
+    nb_ga_individuals: int,   # number of genetic algorithm generations
     experiment_id: str,
     output_path: str,
     skip_if_exists: bool = False,
