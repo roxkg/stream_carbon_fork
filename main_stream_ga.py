@@ -3,6 +3,7 @@ import re
 
 from stream.api import optimize_allocation_ga
 from stream.utils import CostModelEvaluationLUT
+from stream.stages.carbon.carbon_evaluation import calculate_carbon
 from stream.visualization.memory_usage import plot_memory_usage
 from stream.visualization.perfetto import convert_scme_to_perfetto_json
 from stream.visualization.schedule import (
@@ -14,9 +15,9 @@ _logging_format = "%(asctime)s - %(name)s.%(funcName)s +%(lineno)s - %(levelname
 _logging.basicConfig(level=_logging_level, format=_logging_format)
 
 ############################################INPUTS############################################
-accelerator = "stream/inputs/examples/hardware/tpu_like_quad_core.yaml"
+accelerator = "stream/inputs/examples/hardware/simba.yaml"
 workload_path = "stream/inputs/examples/workload/resnet18.onnx"
-mapping_path = "stream/inputs/examples/mapping/tpu_like_quad_core.yaml"
+mapping_path = "stream/inputs/examples/mapping/simba.yaml"
 mode = "fused"
 layer_stacks = [tuple(range(0, 11)), tuple(range(11, 22))] + list((i,) for i in range(22, 49))
 nb_ga_generations = 4
@@ -72,6 +73,8 @@ visualize_timeline_plotly(
     fig_path=timeline_fig_path_plotly,
     cost_lut=cost_lut,
 )
+calculate_carbon(scme)
+print(f"total delay = {scme.latency} cycles\ntotal energy = {scme.energy} pJ\n")
 # Plotting memory usage of best SCME
 plot_memory_usage(scme, section_start_percent, percent_shown, fig_path=memory_fig_path)
 

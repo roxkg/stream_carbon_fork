@@ -98,7 +98,12 @@ class AcceleratorFactory:
     def create_core_graph(self, cores: list[Core], offchip_core: Core | None):
         assert all(core.id == i for i, core in enumerate(cores))
         bandwidth = self.data["bandwidth"]
-        unit_energy_cost = self.data["unit_energy_cost"]
+        # current set core to core (mesh) spacing = 0.1mm driver = 1.2V f = 
+        cap = 0.4   # unit is pF
+        # P = CVVf   f = 1/2bitrate(GB/s) 2Ghz operating frequency
+        # energy /bit = 1/2 * cap*V^2 
+        unit_energy_cost = cap * 1.2 * 1.2 /2 * bandwidth
+        # unit_energy_cost = self.data["unit_energy_cost"]
         connections: list[tuple[int, ...]] = self.data["core_connectivity"]
         edges: list[tuple[Core, Core, dict[str, CommunicationLink]]] = []
 
@@ -136,8 +141,12 @@ class AcceleratorFactory:
 
     def get_edges_to_offchip_core(self, cores: list[Core], offchip_core: Core):
         edges: list[tuple[Core, Core, dict[str, CommunicationLink]]] = []
-
-        unit_energy_cost = self.data["unit_energy_cost"]
+        cap = 0.4   # unit is pF
+        bandwidth = self.data["bandwidth"]
+        # P = CVVf   f = 1/2bitrate(GB/s) 2Ghz operating frequency
+        # energy /bit = 1/2 * cap*V^2 
+        unit_energy_cost = cap * 1.2 * 1.2 /2 * bandwidth
+        #unit_energy_cost = self.data["unit_energy_cost"]
 
         offchip_read_bandwidth = offchip_core.mem_r_bw_dict[Constants.OUTPUT_MEM_OP][0]
         offchip_write_bandwidth = offchip_core.mem_w_bw_dict[Constants.OUTPUT_MEM_OP][0]

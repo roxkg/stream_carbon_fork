@@ -679,9 +679,12 @@ def visualize_timeline_plotly(
     fig.update_layout(
         title_text=(
             f"Computation Schedule.\t\t\tLatency = {scme.latency:.3e}\t\t\tEnergy = {scme.energy:.3e}\t\t\t"
-            f"EDP = {edp:.3e}"
+            f"EDP = {edp:.3e}\t\t\t\n"
         )
     )
+    print(f"offchip link energy={scme.total_cn_offchip_link_energy:.3e}\t\t\toffhip memory energy={scme.total_cn_offchip_memory_energy:.3e}\t\t\t\n")
+    print(f"core-core eneergy={scme.total_core_to_core_link_energy:.3e}\t\t\tcore-core memory={scme.total_core_to_core_memory_energy}\t\t\t\n")
+    print(f"eviction link={scme.total_eviction_to_offchip_link_energy:.3e}\t\t\tsink memory={scme.total_sink_layer_output_offchip_memory_energy}\t\t\t\n")
     # for bar in fig_timeline.data:
     #     fig.add_trace(go.Bar(bar), row=1,col=1)
     fig.update_yaxes(categoryorder="array", categoryarray=get_sorted_y_labels(df))

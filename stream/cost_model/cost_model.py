@@ -35,6 +35,7 @@ class StreamCostModelEvaluation:
         self.total_core_to_core_memory_energy: float | None = None
 
         self.latency: int | None = None
+        self.area_total: int | None = None
         self.max_memory_usage = None
         self.core_timesteps_delta_cumsums = None
         self.operands_to_prefetch = operands_to_prefetch
@@ -77,6 +78,28 @@ class StreamCostModelEvaluation:
             + self.total_core_to_core_link_energy
             + self.total_core_to_core_memory_energy
         )
+        self.area_total, self.mem_area = self.collect_area_data()
+
+    def collect_area_data(self):
+        area_total = 0
+        # get mem area
+        mem_area = 0
+        mem_area_breakdown: dict[str, float] = {}
+        for core in self.accelerator.core_list:
+            with open("outputs/area_log.txt", "a") as file: 
+                file.write(f"current core id = {core.id}, with unit count = {core.operational_array.total_unit_count}\n")
+            area_total += core.operational_array.total_unit_count*1
+            for mem in core.memory_hierarchy.mem_level_list:
+            # for mem in self.accelerator.mem_level_list:
+                memory_instance = mem.memory_instance
+                memory_instance_name = memory_instance.name
+                mem_area += memory_instance.area
+                mem_area_breakdown[memory_instance_name] = memory_instance.area
+                with open("outputs/area_mem_log.txt", "a") as file: 
+                    file.write(f"memory_instance_name = {memory_instance_name}, with instance area = {memory_instance.area}\n")
+            # get total area
+            area_total += mem_area
+        return area_total, mem_area
 
     def plot_schedule(
         self,
