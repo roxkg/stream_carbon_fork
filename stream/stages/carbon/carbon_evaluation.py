@@ -19,15 +19,11 @@ logger = logging.getLogger(__name__)
 def calculate_carbon(
     scme: "StreamCostModelEvaluation",
     output_path: str = "outputs/carbon.txt",
-    CI_path: str = "stream/inputs/examples/carbon/carbon_intensity.yaml",
-    src_op: str = "Coal"
 ):
     #area is in unit: normalized by 1 MAC area for 1 element calculation
     total_area = scme.area_total
     # mem_area = scme.mem_area
-    carbon_intensity_data = open_yaml(CI_path)
-    op_CI = carbon_intensity_data.get(src_op,"source not found")
-    op_CI = float(op_CI)
+    op_CI = scme.carbon_param.CI_op
     energy_value = float(scme.energy)
     op_co2 = op_CI * energy_value / (3.6 * 10**18)
     lifespan = 2
@@ -77,6 +73,7 @@ def Si_wastage_accurate_t(wafer_dia,chip_area,cpa_factors):
     wastage_si_cfp_pdie = unused_si_cfp/dpw
     return wastage_si_cfp_pdie
 
+"""
 def EMIB_carbon(
 
 ): 
@@ -87,6 +84,8 @@ def EMIB_carbon(
     emib_carbon, _, _ = Si_chip([22]*num_if, ["logic"]*num_if, emib_area, scaling_factors,transistors_per_gate,
                         power_per_core,carbon_per_kWh,True)
     package_carbon = np.sum(emib_carbon)* scaling_factors['beolVfeol'].loc[22,'beolVfeol']
+"""
+
 
 
 

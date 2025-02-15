@@ -16,6 +16,7 @@ _logging.basicConfig(level=_logging_level, format=_logging_format)
 
 ############################################INPUTS############################################
 accelerator = "stream/inputs/examples/hardware/simba.yaml"
+carbon_path = "stream/inputs/examples/carbon/relative_carbon_intensity.yaml"
 workload_path = "stream/inputs/examples/workload/resnet18.onnx"
 mapping_path = "stream/inputs/examples/mapping/simba.yaml"
 mode = "fused"
@@ -51,6 +52,7 @@ json_path = f"outputs/{experiment_id}/scme.json"
 scme = optimize_allocation_ga(
     hardware=accelerator,
     workload=workload_path,
+    carbon=carbon_path,
     mapping=mapping_path,
     mode=mode,
     layer_stacks=layer_stacks,

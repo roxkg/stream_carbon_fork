@@ -4,6 +4,7 @@ from typing import Any
 from zigzag.datatypes import MemoryOperand
 
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.stages.stage import Stage, StageCallable
 from stream.workload.computation.computation_node import ComputationNode
 from stream.workload.onnx_workload import ComputationNodeWorkload
@@ -19,11 +20,13 @@ class LayerStacksGenerationStage(Stage):
         list_of_callables: list[StageCallable],
         *,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         workload: ComputationNodeWorkload,
         **kwargs: Any,
     ):
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator
+        self.carbon_param =carbon_param
         self.workload = workload
 
         self.layer_stacks = kwargs.get("layer_stacks", None)
@@ -63,6 +66,7 @@ class LayerStacksGenerationStage(Stage):
         self.only_keep_computation_node_ids()
 
         self.kwargs["accelerator"] = self.accelerator
+        self.kwargs["carbon_param"] = self.carbon_param
         self.kwargs["workload"] = self.workload
         self.kwargs["layer_stacks"] = self.layer_stacks
         sub_stage = self.list_of_callables[0](

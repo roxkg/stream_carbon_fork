@@ -5,6 +5,7 @@ from zigzag.cost_model.cost_model import CostModelEvaluation
 from zigzag.datatypes import MemoryOperand
 
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.stages.stage import Stage, StageCallable
 from stream.utils import CostModelEvaluationLUT, get_required_offchip_bandwidth, get_too_large_operands
 from stream.workload.computation.computation_node import ComputationNode
@@ -20,11 +21,13 @@ class SetFixedAllocationPerformanceStage(Stage):
         *,
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         cost_lut: CostModelEvaluationLUT,
         **kwargs: Any,
     ):
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator
+        self.carbon_param =carbon_param
         self.workload = workload
         self.cost_lut = cost_lut
         self.latency_attr = kwargs.get("latency_attr", "latency_total2")
@@ -38,6 +41,7 @@ class SetFixedAllocationPerformanceStage(Stage):
         kwargs = self.kwargs.copy()
         kwargs["workload"] = self.workload
         kwargs["accelerator"] = self.accelerator
+        kwargs["carbon_param"] = self.carbon_param
         kwargs["cost_lut"] = self.cost_lut
         sub_stage = self.list_of_callables[0](
             self.list_of_callables[1:],

@@ -25,7 +25,9 @@ class AcceleratorParserStage(Stage):
             assert self.accelerator.split(".")[-1] == "yaml", "Expected a yaml file as accelerator input"
             accelerator = self.parse_accelerator_from_yaml(self.accelerator)
 
-        sub_stage = self.list_of_callables[0](self.list_of_callables[1:], accelerator=accelerator, **self.kwargs)
+        # sub_stage = self.list_of_callables[0](self.list_of_callables[1:], accelerator=accelerator, **self.kwargs)
+        self.kwargs["accelerator"] = accelerator
+        sub_stage = self.list_of_callables[0](self.list_of_callables[1:],  **self.kwargs)
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
 

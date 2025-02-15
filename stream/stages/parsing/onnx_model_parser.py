@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.parser.mapping_parser import MappingParser
 from stream.parser.onnx.model import ONNXModelParser
 from stream.stages.stage import Stage, StageCallable
@@ -17,11 +18,13 @@ class ONNXModelParserStage(Stage):
         workload_path: str,
         mapping_path: str,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         **kwargs: Any,
     ):
         super().__init__(list_of_callables, **kwargs)
         self.workload_path = workload_path
         self.accelerator = accelerator
+        self.carbon_param =carbon_param
         self.mapping_parser = MappingParser(mapping_path)
 
     def run(self):
@@ -32,6 +35,7 @@ class ONNXModelParserStage(Stage):
         workload = onnx_model_parser.workload
 
         self.kwargs["accelerator"] = self.accelerator
+        self.kwargs["carbon_param"] = self.carbon_param
         self.kwargs["all_mappings"] = all_mappings
         sub_stage = self.list_of_callables[0](
             self.list_of_callables[1:],

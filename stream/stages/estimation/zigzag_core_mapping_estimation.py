@@ -14,6 +14,7 @@ from zigzag.stages.results.reduce_stages import MinimalLatencyStage
 from zigzag.utils import pickle_deepcopy
 
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.hardware.architecture.core import Core
 from stream.stages.stage import Stage, StageCallable
 from stream.utils import CostModelEvaluationLUT, get_unique_nodes
@@ -37,6 +38,7 @@ class ZigZagCoreMappingEstimationStage(Stage):
         *,
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         loma_lpf_limit: int,
         cost_lut_path: str,
         **kwargs: dict[str, Any],
@@ -49,6 +51,7 @@ class ZigZagCoreMappingEstimationStage(Stage):
         super().__init__(list_of_callables, **kwargs)
         self.workload = workload
         self.accelerator = accelerator
+        self.carbon_param =carbon_param
         self.loma_lpf_limit = loma_lpf_limit
         self.cost_lut_path = cost_lut_path
         self.visualize_cost_lut_path = os.path.splitext(self.cost_lut_path)[0] + ".png"
@@ -127,6 +130,7 @@ class ZigZagCoreMappingEstimationStage(Stage):
         kwargs = self.kwargs.copy()
         kwargs["workload"] = self.workload
         kwargs["accelerator"] = self.accelerator
+        kwargs["carbon_param"] = self.carbon_param
         kwargs["cost_lut"] = self.cost_lut
 
         logger.info("Finished ZigZagCoreMappingEstimationStage.")

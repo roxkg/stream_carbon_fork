@@ -16,6 +16,7 @@ from stream.stages.generation.tiled_workload_generation import (
 )
 from stream.stages.generation.tiling_generation import TilingGenerationStage
 from stream.stages.parsing.accelerator_parser import AcceleratorParserStage
+from stream.stages.parsing.carbonparam_parser import CarbonParamParserStage
 from stream.stages.parsing.onnx_model_parser import ONNXModelParserStage as StreamONNXModelParserStage
 from stream.stages.set_fixed_allocation_performance import SetFixedAllocationPerformanceStage
 from stream.stages.stage import MainStage
@@ -56,6 +57,7 @@ def _sanity_check_gurobi_license():
 
 def optimize_allocation_ga(
     hardware: str,
+    carbon: str,
     workload: str,
     mapping: str,
     mode: Literal["lbl"] | Literal["fused"], # two mode: layer by layer, layer fused
@@ -82,10 +84,12 @@ def optimize_allocation_ga(
     if os.path.exists(scme_path) and skip_if_exists:
         scme = pickle_load(scme_path)
         logger.info(f"Loaded SCME from {scme_path}")
+    # Start evaluation from zero
     else:
         mainstage = MainStage(
             [  # Initializes the MainStage as entry point
                 AcceleratorParserStage,  # Parses the accelerator
+                CarbonParamParserStage,
                 StreamONNXModelParserStage,  # Parses the ONNX Model into the workload
                 LayerStacksGenerationStage,
                 TilingGenerationStage,
@@ -96,6 +100,7 @@ def optimize_allocation_ga(
                 GeneticAlgorithmAllocationStage,
             ],
             accelerator=hardware,  # required by AcceleratorParserStage
+            carbon_path=carbon, #required by CarbonParamParserStage
             workload_path=workload,  # required by ModelParserStage
             mapping_path=mapping,  # required by ModelParserStage
             loma_lpf_limit=6,  # required by LomaEngine

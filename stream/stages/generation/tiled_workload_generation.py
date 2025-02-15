@@ -9,6 +9,7 @@ from zigzag.utils import pickle_deepcopy
 
 from stream.cost_model.group_allocation import GroupIdManager
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.node_tensor import NodeTensor
 from stream.opt.partitioning.TemporalLoop import TemporalLoop
 from stream.opt.partitioning.utils import (
@@ -50,6 +51,7 @@ class TiledWorkloadGenerationStage(Stage):
         *,
         workload: ONNXWorkload,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         **kwargs: Any,
     ):
         """
@@ -59,6 +61,7 @@ class TiledWorkloadGenerationStage(Stage):
         super().__init__(list_of_callables, **kwargs)
         self.workload = workload
         self.accelerator = accelerator
+        self.carbon_param =carbon_param
 
         # Save for each of the workload's nodes the finer nodes that will be generated
         self.finer_nodes_dict: dict[ComputationNode, list[ComputationNode]] = {}
@@ -114,6 +117,7 @@ class TiledWorkloadGenerationStage(Stage):
         kwargs["original_workload"] = pickle_deepcopy(self.workload)
         kwargs["workload"] = partitioned_workload
         kwargs["accelerator"] = self.accelerator
+        kwargs["carbon_param"] = self.carbon_param
 
         if "scheduling_order" not in kwargs:
             kwargs["scheduling_order"] = self.get_scheduling_order(partitioned_workload)

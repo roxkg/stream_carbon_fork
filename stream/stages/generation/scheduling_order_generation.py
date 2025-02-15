@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.stages.stage import Stage, StageCallable
 from stream.workload.computation.computation_node import ComputationNode
 from stream.workload.onnx_workload import ComputationNodeWorkload
@@ -15,11 +16,13 @@ class SchedulingOrderGenerationStage(Stage):
         list_of_callables: list[StageCallable],
         *,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         workload: ComputationNodeWorkload,
         **kwargs: dict[str, Any],
     ):
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator
+        self.carbon_param =carbon_param
         self.workload = workload
         self.layer_stacks = kwargs.get("layer_stacks", None)  # optional
         self.scheduling_order = None
@@ -37,6 +40,7 @@ class SchedulingOrderGenerationStage(Stage):
             self.scheduling_order = sorted(((n.id, n.sub_id) for n in self.workload.nodes()), reverse=True)
 
         self.kwargs["accelerator"] = self.accelerator
+        self.kwargs["carbon_param"] = self.carbon_param
         self.kwargs["workload"] = self.workload
         self.kwargs["scheduling_order"] = self.scheduling_order
         sub_stage = self.list_of_callables[0](

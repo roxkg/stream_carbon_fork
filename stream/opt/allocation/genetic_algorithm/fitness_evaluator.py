@@ -3,6 +3,7 @@ from zigzag.utils import pickle_deepcopy
 
 from stream.cost_model.cost_model import StreamCostModelEvaluation
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.utils import CostModelEvaluationLUT, get_required_offchip_bandwidth, get_too_large_operands
 from stream.workload.computation.computation_node import ComputationNode
 from stream.workload.onnx_workload import ComputationNodeWorkload
@@ -13,10 +14,12 @@ class FitnessEvaluator:
         self,
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         cost_lut: CostModelEvaluationLUT,
     ) -> None:
         self.workload = workload
         self.accelerator = accelerator
+        self.carbon_param = carbon_param
         self.cost_lut = cost_lut
         # self.num_cores = len(inputs.accelerator.cores)
 
@@ -31,12 +34,13 @@ class StandardFitnessEvaluator(FitnessEvaluator):
         self,
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         cost_lut: CostModelEvaluationLUT,
         layer_groups_flexible,
         operands_to_prefetch: list[LayerOperand],
         scheduling_order: list[tuple[int, int]],
     ) -> None:
-        super().__init__(workload, accelerator, cost_lut)
+        super().__init__(workload, accelerator, carbon_param, cost_lut)
 
         self.weights = (-1.0, -1.0)
         self.metrics = ["energy", "latency"]
@@ -55,6 +59,7 @@ class StandardFitnessEvaluator(FitnessEvaluator):
         scme = StreamCostModelEvaluation(
             pickle_deepcopy(self.workload),
             pickle_deepcopy(self.accelerator),
+            pickle_deepcopy(self.carbon_param),
             self.operands_to_prefetch,
             self.scheduling_order,
         )

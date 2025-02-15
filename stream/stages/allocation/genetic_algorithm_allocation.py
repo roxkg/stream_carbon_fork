@@ -4,6 +4,7 @@ from typing import Any
 from zigzag.datatypes import LayerOperand
 
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.opt.allocation.genetic_algorithm.fitness_evaluator import (
     StandardFitnessEvaluator,
 )
@@ -34,6 +35,7 @@ class GeneticAlgorithmAllocationStage(Stage):
         *,
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         cost_lut: CostModelEvaluationLUT,
         nb_ga_generations: int,
         nb_ga_individuals: int,
@@ -54,6 +56,7 @@ class GeneticAlgorithmAllocationStage(Stage):
         super().__init__(list_of_callables, **kwargs)
         self.workload = workload
         self.accelerator = accelerator
+        self.carbon_param =carbon_param
         self.cost_lut = cost_lut
         self.nb_generations = nb_ga_generations
         self.nb_individuals = nb_ga_individuals
@@ -93,6 +96,7 @@ class GeneticAlgorithmAllocationStage(Stage):
         self.fitness_evaluator = StandardFitnessEvaluator(
             self.workload,
             self.accelerator,
+            self.carbon_param,
             self.cost_lut,
             self.layer_groups_flexible,
             self.operands_to_prefetch,

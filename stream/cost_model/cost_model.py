@@ -2,6 +2,7 @@ from zigzag.datatypes import LayerOperand
 
 from stream.cost_model.scheduler import schedule_graph
 from stream.hardware.architecture.accelerator import Accelerator
+from stream.hardware.architecture.carbonparam import CarbonParam
 from stream.visualization.memory_usage import plot_memory_usage
 from stream.visualization.schedule import plot_timeline_brokenaxes
 from stream.workload.onnx_workload import ComputationNodeWorkload
@@ -17,12 +18,14 @@ class StreamCostModelEvaluation:
         self,
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         operands_to_prefetch: list[LayerOperand],
         scheduling_order: list[tuple[int, int]],
     ) -> None:
         # Initialize the SCME by setting the workload graph to be scheduled
         self.workload = workload
         self.accelerator = accelerator
+        self.carbon_param = carbon_param
         self.energy: float | None = None
         self.total_cn_onchip_energy: float | None = None
         self.total_cn_offchip_link_energy: float | None = None
