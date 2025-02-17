@@ -12,6 +12,8 @@ class CarbonValidator:
         "CI_op": {"type": "string", "allowed": ["Coal", "Gas", "Biomass", "Solar", "Geothermal", "Hydropower", "Nuclear", "Wind"]},
         "CI_em": {"type": "string", "allowed": ["Coal", "Gas", "Biomass", "Solar", "Geothermal", "Hydropower", "Nuclear", "Wind"]},
         "lifetime": {"type": "integer", "default": 0},
+        "frequency":{"type": "float", "default": 1},
+        "technology_node":{"type": "int", "default": 28, "min": 7, "max": 28},
     }
     
     def __init__(self, data: Any, carbon_path: str):

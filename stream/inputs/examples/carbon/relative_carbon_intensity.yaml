@@ -2,3 +2,6 @@
 CI_op: Coal
 CI_em: Gas
 lifetime: 5
+# GHz
+frequency: 1.8
+technology_node: 14

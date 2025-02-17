@@ -9,10 +9,14 @@ class CarbonParam:
         CI_op: int, 
         CI_em: int, 
         lifetime: int, 
+        frequency: float,
+        technology_node: int
     ):
         self.CI_op = CI_op
         self.CI_em = CI_em
         self.lifetime = lifetime
+        self.frequency = frequency
+        self.technology_node = technology_node
 
     
         
