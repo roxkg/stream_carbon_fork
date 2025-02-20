@@ -41,9 +41,15 @@ def calculate_carbon(
     # one large chip
     cpa = get_carbon_per_area(scme.carbon_param.technology_node) 
     
+
+    # area = (12000/1024*total_area)*0.000008*0.000008
+    # print(area)
+    mem_area = scme.mem_area
+    total_area = scme.area_total
+    logic_area = total_area - mem_area
+    logic_area,mem_area = area_scaling(logic_area, mem_area, scme.carbon_param.technology_node)
+    area = logic_area + mem_area
     
-    area = (12000/1024*total_area)*0.000008*0.000008
-    print(area)
     wastage_extra_cfp = waste_carbon_per_die(wafer_dia=450,chip_area=area,cpa_factors=cpa)
     yields = yield_calc(area,defect_density)
     mfg_carbon = cpa*area / yields
@@ -97,7 +103,7 @@ def get_defect_rate(technology_node):
 def get_carbon_per_area(technology_node):
     cpas = open_yaml("stream/inputs/examples/carbon/carbon_per_area.yaml")
     nodes = open_yaml("stream/inputs/examples/carbon/technology_node.yaml")
-    # in node is in 7,10,14,22,28, return defect density directly
+    # in node is in 7,10,14,22,28, return cpa directly
     if technology_node in nodes:
         return cpas[nodes.index(technology_node)]
 
@@ -105,6 +111,20 @@ def get_carbon_per_area(technology_node):
     carbon_per_area = np.interp(technology_node, nodes, cpas)
 
     return carbon_per_area
+
+def area_scaling(logic_area, mem_area, technology_node): 
+    # do area scaling based on digital/sram type
+    logic_scaling = open_yaml("stream/inputs/examples/carbon/logic_scaling.yaml")
+    sram_scaling = open_yaml("stream/inputs/examples/carbon/sram_scaling.yaml")
+    nodes = open_yaml("stream/inputs/examples/carbon/technology_node.yaml")
+    if technology_node in nodes: 
+        logic_area = logic_area * logic_scaling["area"][nodes.index(technology_node)]
+        mem_area = mem_area * sram_scaling["area"][nodes.index(technology_node)]
+        return logic_area,mem_area
+
+    logic_area = logic_area * logic_scaling["area"][nodes.index(technology_node)]
+    mem_area = mem_area * sram_scaling["area"][nodes.index(technology_node)]
+    return logic_area,mem_area
 
 
 
