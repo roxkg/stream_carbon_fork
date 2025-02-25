@@ -51,7 +51,36 @@ class CarbonEvaluation:
             yields = self.yield_calc(area,defect_density)
             mfg_carbon = cpa*area / yields
             mfg_carbon = mfg_carbon+wastage_extra_cfp
-            print(mfg_carbon)
+            print("-------------mfg_carbon----------------")
+            print(node,"nm:",mfg_carbon,"mfg_carbon(g)")
+
+            design_carbon_per_chiplet, total_design_carbon = self.design_costs(area,8, 10, op_CI, node['node']  )
+            logic_carbon_per_chiplet, total_logic_carbon = self.design_costs(logic_area,8, 10, op_CI, node['node'] )
+            mem_carbon_per_chiplet, total_mem_carbon = self.design_costs(mem_area,8, 10, op_CI, node['node'] )
+            print("------------design carbon---------------")
+            print(node,"nm:",design_carbon_per_chiplet,"design_carbon_per_chiplet(g)" )
+            print(node,"nm:",total_design_carbon,"total_design_carbon(g)" )
+            print(node,"nm:",logic_carbon_per_chiplet,"design_carbon_per_logic_chiplet(g)" )
+            print(node,"nm:",total_logic_carbon,"total_logic_design_carbon(g)" )
+            print(node,"nm:",mem_carbon_per_chiplet,"design_carbon_per_mem_chiplet(g)" )
+            print(node,"nm:",total_mem_carbon,"total_mem_design_carbon(g)" )
+
+            print("--------op carbon---------")
+
+            activity=[0.2, 0.667, 0.1]
+
+            op_carbon_logic = self.operational_costs(activity, node['node'], "logic", logic_area*6/area, self.scme.lifetime, op_CI)
+            print(node,"nm:",op_carbon_logic,"op_carbon_logic(kg)" )
+            op_carbon_sram = self.operational_costs(activity, node['node'], "sram", mem_area*6/area, self.scme.lifetime, op_CI)
+            print(node,"nm:",op_carbon_sram,"op_carbon_sram(kg)" )
+            op_carbon = op_carbon_logic + op_carbon_sram
+            print(node,"nm:",op_carbon,"op_carbon(kg)" )
+
+            print("------------------total-----------------")
+            total = (mfg_carbon + design_carbon_per_chiplet)/1000
+            print("total co2 kg: ", total)
+            
+            print("--------------------------------------------")
 
         
 
@@ -116,6 +145,7 @@ class CarbonEvaluation:
         carbon_per_area = np.interp(technology_node, nodes, cpas)
 
         return carbon_per_area
+    
     def area_scaling(self,logic_area, mem_area, technology_node): 
         # do area scaling based on digital/sram type
         logic_scaling = open_yaml("stream/inputs/examples/carbon/logic_scaling.yaml")
@@ -130,6 +160,38 @@ class CarbonEvaluation:
         logic_area = logic_area * logic_scaling["area"][nodes.index(technology_node)]
         mem_area = mem_area * sram_scaling["area"][nodes.index(technology_node)]
         return logic_area,mem_area
+    
+    def design_costs(self, areas, Transistors_per_gate,Power_per_core,Carbon_per_kWh, technology_node):
+        transistor_density = open_yaml("stream/inputs/examples/carbon/transistor_scaling.yaml")
+        gates_design_time = open_yaml("stream/inputs/examples/carbon/gates_per_hr_per_core.yaml")
+        nodes = open_yaml("stream/inputs/examples/carbon/technology_node.yaml")
+        nodes = nodes["technology_node"]
+        transistors = areas * transistor_density['Transistors_per_mm2'][nodes.index(technology_node)]
+        gates = transistors/Transistors_per_gate
+        CPU_core_hours = gates / gates_design_time['Gates_per_hr_per_core'][nodes.index(technology_node)]
+        total_energy = Power_per_core*CPU_core_hours/1000 #in kWh
+        design_carbon = Carbon_per_kWh * total_energy
+        design_carbon_per_chiplet = design_carbon*90/1e5
+        return design_carbon_per_chiplet, design_carbon
+    
+    def operational_costs(self, activity, technology_node, type, powers_in, lifetime, op_CI):
+        active = activity[0]
+        on = activity[1]
+        avg_pwr = activity[2]
+        nodes = open_yaml("stream/inputs/examples/carbon/technology_node.yaml")
+        nodes = nodes["technology_node"]
+        dyn_pwr_ratio = open_yaml("stream/inputs/examples/carbon/dyn_pwr_ratio.yaml")
+        if type == "logic": 
+            scaling = open_yaml("stream/inputs/examples/carbon/logic_scaling.yaml")
+        else:
+            scaling = open_yaml("stream/inputs/examples/carbon/sram_scaling.yaml")
+        dyn_ratio =  dyn_pwr_ratio['dyn_pwr_ratio'][nodes.index(technology_node)]
+        pwr_scale = scaling["power"][nodes.index(technology_node)]
+        powers_tech_scaled = powers_in * pwr_scale
+        powers_scaled = powers_tech_scaled*on*avg_pwr*(dyn_ratio*active + (1-dyn_ratio))
+        energy = lifetime*powers_scaled/1000
+        op_carbon = op_CI * energy/20
+        return op_carbon
     
 input_data = open_yaml("stream/inputs/testing/carbon_validation/GA102.yaml")
 area_dict = {item["name"]: item["area"] for item in input_data["area_list"]}

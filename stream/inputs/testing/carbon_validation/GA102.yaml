@@ -1,6 +1,6 @@
 CI_op: 490
 CI_em: 820
-lifetime: 10
+lifetime: 19520
 frequency: 2.5
 technology_node:
   - node: 7
