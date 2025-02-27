@@ -1,6 +1,6 @@
 CI_op: 490
 CI_em: 820
-lifetime: 19520
+lifetime: 17520
 frequency: 2.5
 technology_node:
   - node: 7
@@ -9,6 +9,9 @@ technology_node:
 area_list:
   - name: "logic_area"
     area: 425.01
+  - name: "analog_area"
+    area: 92.03
   - name: "mem_area"
     area: 58.78
+energy_op: 225
 

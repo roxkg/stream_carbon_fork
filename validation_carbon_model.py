@@ -8,7 +8,8 @@ class CarbonModel:
         lifetime: int, 
         frequency: float,
         technology_node: dict[str, Any] | list[dict[str, Any]],
-        area_list: dict[str, Any] | list[dict[str, Any]]
+        area_list: dict[str, Any] | list[dict[str, Any]],
+        energy_use:int
     ):
         self.CI_op = CI_op
         self.CI_em = CI_em
@@ -16,3 +17,4 @@ class CarbonModel:
         self.frequency = frequency
         self.technology_node = technology_node
         self.area_list = area_list
+        self.energy_use = energy_use
