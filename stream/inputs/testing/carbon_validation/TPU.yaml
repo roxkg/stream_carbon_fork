@@ -1,0 +1,14 @@
+CI_op: 490
+CI_em: 820
+lifetime: 131400
+frequency: 2.5
+technology_node:
+  - node: 10   #paper里面是7，但是code写的10
+area_list:
+  - name: "logic_area"
+    area: 444    # 600 * 0.74
+  - name: "analog_area"
+    area: 96     # 600 * 0.16
+  - name: "mem_area"
+    area: 60       # 600 * 0.1
+energy_op: 192

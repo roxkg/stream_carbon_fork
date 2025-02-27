@@ -3,8 +3,12 @@ CI_em: 820
 lifetime: 131400
 frequency: 2.5
 technology_node:
-  - node: 12
+  - node: 10   #paper里面是12，但是code写的10
 area_list:
   - name: "logic_area"
-    area: 340
+    area: 251.6    # 340 * 0.74
+  - name: "analog_area"
+    area: 54.4     # 340 * 0.16
+  - name: "mem_area"
+    area: 34       # 340 * 0.1
 energy_op: 70
