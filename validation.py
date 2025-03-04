@@ -4,6 +4,7 @@ import itertools as it
 import math
 import ast
 from typing import Any
+from matplotlib import pyplot as plt
 from zigzag.utils import open_yaml
 from validation_carbon_model import CarbonModel
 
@@ -20,7 +21,6 @@ class CarbonEvaluation:
         # mem_area = self.scme.area_list["mem_area"]
         op_CI = self.scme.CI_op
         # energy_value = float(self.scme.energy)
-        # pJ -> kWh
         # op_co2 = op_CI * energy_value / (3.6 * 10**18)
         lifespan = self.scme.lifetime
         frequency = self.scme.frequency
@@ -29,9 +29,13 @@ class CarbonEvaluation:
         # lifetime working proportion: 0.2
         # lifeop_co2 = lifespan*365*24*60*60*0.2/taskspan * op_co2
         lifeop_co2 = lifespan*365*24*60*60*0.2 * op_CI
-
-        combinations = list(it.product(self.scme.technology_node, repeat=len(self.scme.technology_node)))
+        combinations = list(it.product(self.scme.technology_node, repeat=len(self.scme.area_list)))
         area = np.array(list(self.scme.area_list.values()))
+        design_carbon = np.zeros((len(combinations), len(self.scme.area_list)+1))
+        op_carbon = np.zeros((len(combinations), len(self.scme.area_list)+1))
+        carbon = np.zeros((len(combinations), len(self.scme.area_list)+1))
+        emb_carbon = np.zeros(len(combinations))
+        op_carbon_1 = np.zeros(len(combinations))
         for n, comb in enumerate(combinations):
             cpa = self.get_carbon_per_area(comb) 
             defect_density = self.get_defect_rate(comb)
@@ -39,35 +43,46 @@ class CarbonEvaluation:
             total_area = sum(new_area)
             yields = []
             wastage_extra_cfp = []
-            for i, c in enumerate(comb):   
-                yields.append(self.yield_calc(new_area[i], defect_density[i]))
-                wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450,chip_area=new_area[i],cpa_factors=cpa[i]))
-            mfg_carbon = cpa*area / yields
-            # print(mfg_carbon + wastage_extra_cfp)
+            if ~(np.all(np.array(comb) == comb[0])): 
+                for i, c in enumerate(comb):   
+                    yields.append(self.yield_calc(new_area[i], defect_density[i]))
+                    wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450,chip_area=new_area[i],cpa_factors=cpa[i]))
+            else: 
+                yields = self.yield_calc(sum(new_area), defect_density[0])
+                wastage_extra_cfp = self.waste_carbon_per_die(diameter=450,chip_area=sum(new_area),cpa_factors=cpa[0])
+                wastage_extra_cfp = (wastage_extra_cfp * area) / area.sum()
 
-            design_carbon_per_chiplet, design_carbon = self.design_costs(new_area,8,10,700,comb)
-            # print(design_carbon_per_chiplet)
-            # print(design_carbon)
-
+            carbon[n,:-1] = cpa*np.array(new_area) / yields + wastage_extra_cfp
+            # mfg_carbon = cpa*np.array(new_area) / yields
+            print(carbon[n,:-1])
+            # design_carbon_per_chiplet, design_carbon = self.design_costs(new_area,8,10,700,comb)
+            design_carbon_per_chiplet, design_carbon[n,:-1] = self.design_costs(new_area,8,10,700,comb)
+            design_carbon[n,:-1] = design_carbon[n,:-1]*90/1e5
+            package_c, router_c, design_carbon[n,-1], router_a = self.package_costs(comb, False, 700)
+            carbon[n, -1] = package_c*1 + router_c   # 1 is package factor
             activity=[0.2, 0.667, 0.1]
-            op_carbon = self.operational_costs(activity, comb, area*self.scme.energy_use/sum(area), self.scme.lifetime, 700)
-            print(op_carbon)
+            op_carbon[n,:-1] = self.operational_costs(activity, comb, area*self.scme.energy_use/sum(area), self.scme.lifetime, 700)
+            emb_carbon[n:-1] = sum(carbon[n,:-1]) + sum(design_carbon[n,:-1])
+            op_carbon_1[n:-1] = sum(op_carbon[n,:-1])
+
+
 
         """
-        # below shoule be package carbon emission
-        rdl_layers = 6
-        package_defect_den = defect_density/4
-        pacakge_yield = yield_calc(area,package_defect_den)
-        wastage_extra_cfp = waste_carbon_per_die(wafer_dia=450,chip_area=area,cpa_factors=cpa)
-        mfg_carbon = cpa*area / pacakge_yield
-        hi_carbon = mfg_carbon+wastage_extra_cfp
-        package_carbon = hi_carbon* 0.4916
-        package_carbon *= rdl_layers/8
-        cemb = package_carbon + mfg_carbon
+        total_carbon = carbon + design_carbon + op_carbon
+        carbon = pd.DataFrame(data=carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["Packaging"]))
+        total_carbon = pd.DataFrame(data=total_carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["Packaging"]))
+        carbon.plot(kind='bar', stacked=True, figsize = (21,7),
+            title=f'Stacked CO2 manufacturing: GA102')
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
+
+        total_carbon = pd.DataFrame(data=zip(op_carbon_1,emb_carbon), index=combinations, columns=(["op","emb"]))
+        total_carbon.plot(kind='bar', stacked=True, figsize = (10,7),
+            title=f'Total C02 manufacturing+design: GA102')
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
+        plt.show()
         """
-        
-        # RDL fan-out 
-        # "rdl_layers" = 6, "defect_density" = 0.09 
 
     def yield_calc(self,area, defect_density):
         yield_val = (1+(defect_density*1e4)*(area*1e-6)/10)**-10
@@ -184,6 +199,113 @@ class CarbonEvaluation:
         op_carbon = op_CI * energy
         return op_carbon
     
+    def package_costs(self, technology_node, return_router_area, carbon_per_kwh):
+        package_param = open_yaml("stream/inputs/examples/carbon/package_param.yaml")
+        if ~(np.all(np.array(technology_node) == technology_node[0])):
+            num_chiplets = len(self.scme.area_list)
+            interposer_area, num_if = self.recursive_split(self.scme.area_list, package_param["EMIBPitch"])
+            num_if = int(np.ceil(num_if))
+            interposer_area = np.prod(interposer_area)
+            interposer_carbon = self.package_mfg_carbon(technology_node, interposer_area)
+
+            logic_scaling = open_yaml("stream/inputs/examples/carbon/logic_scaling.yaml")
+            sram_scaling = open_yaml("stream/inputs/examples/carbon/sram_scaling.yaml")
+            analog_scaling = open_yaml("stream/inputs/examples/carbon/analog_scaling.yaml")
+            scalings = list(zip(logic_scaling["area"], analog_scaling["area"], sram_scaling["area"]))
+            beolVfeol = open_yaml("stream/inputs/examples/carbon/technology_node.yaml")
+            beolVfeol = beolVfeol["beolVfeol"]
+            nodes = open_yaml("stream/inputs/examples/carbon/technology_node.yaml")
+            nodes = nodes["technology_node"]
+            if self.scme.package_type=="active": 
+                router_area = 4.47 * num_chiplets
+                router_area = interposer_carbon * router_area/interposer_area
+                router_design = 0 
+                package_carbon = interposer_carbon * beolVfeol[-1]
+
+            elif self.scme.package_type == "3D":
+                dims = np.sqrt(np.array(self.scme.area_list, dtype=np.float64))
+                num_tsv_1d = np.floor(dims/package_param["tsv_pitch"])
+                overhead_3d = (num_tsv_1d**2) * (package_param["tsv_size"]**2)
+                area_3d = self.scme.area_list + overhead_3d
+                carbon3d= self.package_mfg_carbon(technology_node,area_3d)
+                carbon2d= self.package_mfg_carbon(technology_node,self.scme.area_list)
+                package_carbon = np.sum(carbon3d-carbon2d)
+                
+                router_area = 0.33/np.array([scalings[ty][14, 'area'] for ty in self.scme.area_list.keys()])
+                router_carbon, router_design, _ = self.package_mfg_carbon(technology_node, router_area)
+                router_carbon, router_design = np.sum(router_carbon), np.sum(router_design) 
+                bonding_yield = bonding_yield**num_chiplets
+            elif self.scme.package_type in ['passive', 'RDL', 'EMIB']: 
+                router_area = 0.33/np.array([scalings[ty].loc[14, 'area'] for ty in self.scme.area_list.keys()])
+                router_carbon= self.package_mfg_carbon(technology_node, router_area)
+                router_design = 0
+                router_carbon, router_design = np.sum(router_carbon), np.sum(router_design)
+                if self.scme.package_type == 'passive':
+                    package_carbon = interposer_carbon* beolVfeol[nodes.index(package_param["interposer_node"])]
+                elif self.scme.package_type == 'RDL':
+                    package_carbon = interposer_carbon* beolVfeol[nodes.index(package_param["interposer_node"])]
+                    package_carbon *= package_param["RDLLayers"]/package_param["numBEOL"]   
+                elif self.scme.package_type == 'EMIB':
+                    emib_area =  [5*5]*num_if
+#                   print("NUMBER OF INTERFACES",num_if)
+                    emib_carbon = self.package_mfg_carbon([22]*num_if,emib_area)
+                    package_carbon = np.sum(emib_carbon)* beolVfeol[3] #22nm
+            else: 
+                raise NotImplemented
+            
+            package_carbon /= bonding_yield
+            router_carbon /= bonding_yield
+            if return_router_area: 
+                return package_carbon, router_carbon, router_design, router_area
+            else: 
+                return package_carbon, router_carbon, router_design
+
+
+    def recursive_split(self, areas, axis=0, emib_pitch=10):
+        sorted_areas = np.sort(areas[::-1])
+        if len(areas)<=1:
+            v = (np.sum(areas)/2)**0.5
+            size_2_1 = np.array((v + v*((axis+1)%2), v +axis*v))
+#             print("single", axis, size_2_1)
+            return size_2_1, 0
+        else:
+            sums = np.array((0.0,0.0))
+            blocks= [[],[]]
+            for i, area in enumerate(sorted_areas):
+                blocks[np.argmin(sums)].append(area)
+                sums[np.argmin(sums)] += area
+#           print("blocks",axis, blocks)
+            left, l_if = self.recursive_split(blocks[0], (axis+1)%2, emib_pitch)
+#           print("left",axis, left)
+            right, r_if = self.recursive_split(blocks[1], (axis+1)%2, emib_pitch)
+#           print("right",axis, right)
+            sizes = np.array((0.0,0.0))
+            sizes[axis] = left[axis] + right[axis] + 0.5
+            sizes[(axis+1)%2] = np.max((left[(axis+1)%2], right[(axis+1)%2]))
+            t_if = l_if + r_if 
+            t_if += np.ceil(np.min((left[(axis+1)%2], right[(axis+1)%2]))/emib_pitch) # for overlap 1 interface per 10mm
+            return sizes, t_if
+    
+    def package_mfg_carbon(self, technology_node, interposer_area): 
+        cpa = self.get_carbon_per_area(technology_node) 
+        defect_density = self.get_defect_rate(technology_node)
+        new_area = self.area_scaling(interposer_area, technology_node)
+        total_area = sum(new_area)
+        yields = []
+        wastage_extra_cfp = []
+        if ~(np.all(np.array(technology_node) == technology_node[0])): 
+            for i, c in enumerate(technology_node):   
+                yields.append(self.yield_calc(new_area[i], defect_density[i]/4))
+                wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450,chip_area=new_area[i],cpa_factors=cpa[i]))
+        else: 
+            yields = self.yield_calc(sum(new_area), defect_density[0]/4)
+            wastage_extra_cfp = self.waste_carbon_per_die(diameter=450,chip_area=sum(new_area),cpa_factors=cpa[0])
+            wastage_extra_cfp = (wastage_extra_cfp * interposer_area) / interposer_area.sum()
+
+        interposer_carbon = cpa*np.array(new_area) / yields + wastage_extra_cfp
+        return interposer_carbon
+    
+
 input_data = open_yaml("stream/inputs/testing/carbon_validation/TPU.yaml")
 area_dict = {item["type"]: item["area"] for item in input_data["area_list"]}
 
@@ -194,10 +316,11 @@ hardware = CarbonModel(CI_op=input_data["CI_op"],
                        technology_node=input_data["technology_node"], 
                        area_list=area_dict,
                        energy_use=input_data["energy_op"], 
-                       scaling_enable=True)
+                       scaling_enable=True, 
+                       package_type=input_data["package_type"])
 
 evaluation= CarbonEvaluation(hardware)
-evaluation.calculate_carbon("outputs/test_result/GA102.txt")
+evaluation.calculate_carbon("outputs/test_result/TPU.txt")
 
 
 

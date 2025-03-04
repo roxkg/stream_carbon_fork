@@ -10,7 +10,8 @@ class CarbonModel:
         technology_node: dict[str, Any] | list[dict[str, Any]],
         area_list: dict[str, Any] | list[dict[str, Any]],
         energy_use:int, 
-        scaling_enable: bool
+        scaling_enable: bool, 
+        package_type: str
     ):
         self.CI_op = CI_op
         self.CI_em = CI_em
@@ -20,3 +21,4 @@ class CarbonModel:
         self.area_list = area_list
         self.energy_use = energy_use
         self.scaling_enable = scaling_enable
+        self.package_type = package_type

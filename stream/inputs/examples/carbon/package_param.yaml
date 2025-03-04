@@ -1,0 +1,8 @@
+interposer_node: 65
+tsv_pitch: 0.025
+tsv_size: 0.005
+RDLLayers: 6
+EMIBLayer: 5
+EMIBPitch: 10
+numBEOL: 8
+bonding_yield: 0.99
