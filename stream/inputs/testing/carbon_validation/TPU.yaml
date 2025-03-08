@@ -1,6 +1,6 @@
 CI_op: 490
 CI_em: 820
-lifetime: 131400
+lifetime: 52560
 frequency: 2.5
 technology_node: [10]   #paper里面是7，但是code写的10
 area_list:
@@ -11,3 +11,4 @@ area_list:
   - type: "mem"
     area: 60       # 600 * 0.1
 energy_op: 192
+package_type: "RDL"
