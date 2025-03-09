@@ -56,14 +56,14 @@ class CarbonEvaluation:
             # mfg_carbon = cpa*np.array(new_area) / yields
             # design_carbon_per_chiplet, design_carbon = self.design_costs(new_area,8,10,700,comb)
             design_carbon_per_chiplet, design_carbon[n,:-1] = self.design_costs(new_area,8,10,700,comb)
-            # design_carbon[n,:-1] = design_carbon[n,:-1]*90/1e5
             package_c, router_c, design_carbon[n,-1], router_a = self.package_costs(comb, new_area, True, 700)
+            # print(package_c, router_c, design_carbon[n,-1], router_a)
             carbon[n, -1] = package_c*1 + router_c   # 1 is package factor
+            print(carbon[n])
             activity=[0.2, 0.667, 0.1]
             op_carbon[n,:-1] = self.operational_costs(activity, comb, area*self.scme.energy_use/sum(area), self.scme.lifetime, 700)
-            emb_carbon[n:-1] = sum(carbon[n,:-1]) + sum(design_carbon[n,:-1])
+            emb_carbon[n] = sum(carbon[n]) + (sum(design_carbon[n])*100/1e5)
             op_carbon_1[n:-1] = sum(op_carbon[n,:-1])
-        """
         """
         #App-dev CFP
         app_dev_c = self.app_cfp(power_per_core=10, num_core=8, Carbon_per_kWh=700,
@@ -100,23 +100,76 @@ class CarbonEvaluation:
         print(f"Total     CFP : {tot}")
         print("-------------------------")
         print(" ")
-        
         """
-        total_carbon = carbon + design_carbon + op_carbon
-        carbon = pd.DataFrame(data=carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["Packaging"]))
-        total_carbon = pd.DataFrame(data=total_carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["Packaging"]))
-        carbon.plot(kind='bar', stacked=True, figsize = (21,7),
-            title=f'Stacked CO2 manufacturing: GA102')
-        plt.xticks(fontsize=10)
-        plt.yticks(fontsize=10)
 
-        total_carbon = pd.DataFrame(data=zip(op_carbon_1,emb_carbon), index=combinations, columns=(["op","emb"]))
-        total_carbon.plot(kind='bar', stacked=True, figsize = (10,7),
-            title=f'Total C02 manufacturing+design: GA102')
+        """
+        carbon_eco = np.loadtxt("carbon_GA102.txt")
+        carbon_eco = carbon_eco[:18]
+        des_eco = np.loadtxt("des_GA102.txt")
+        des_eco = des_eco[:18]*100/1e5
+        ope_eco = np.loadtxt("ope_GA102.txt")
+        ope_eco = ope_eco[:18]
+        # tot_eco = np.loadtxt("tot_GA102.txt")
+        # tot_eco = tot_eco[:18]
+        design_carbon = design_carbon[:18]
+        combinations = combinations[:18]
+        bar_width = 0.3  
+        fig, ax = plt.subplots(figsize=(10, 6))
+        des_eco = pd.DataFrame(data=des_eco, index=combinations, columns= (list(self.scme.area_list.keys()) + ["packaging"]))
+        des_self = pd.DataFrame(data=design_carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["packaging"]))
+        
+
+        des_eco.plot(kind='bar', ax=ax, stacked=True, position=1, width = bar_width, align='edge')
+        des_self.plot(kind='bar', ax=ax, stacked=True, position=0, width = bar_width, align='edge')
+
+        ax.legend((list(self.scme.area_list.keys()) + ["packaging"]), loc='upper left')
+        ax.set_xticks(range(len(combinations))) 
+
+        ax.set_xlabel('node')
+        ax.set_ylabel('CO2 (g)')
+
+        for bar in ax.patches:
+            bar.set_edgecolor('black')  # 设置边框颜色
+            bar.set_linewidth(1)      # 设置边框宽度
         plt.xticks(fontsize=10)
         plt.yticks(fontsize=10)
+        """
+
+        """
+        carbon_eco.plot(kind='bar', stacked=True, figsize = (21,7), 
+            title=f'Stacked CO2 manufacturing: GA102')
+        carbon_self.plot(kind='bar', stacked=True, figsize = (21,7), 
+            title=f'Stacked CO2 manufacturing: GA102')
+        """
+        
+        # total_carbon = pd.DataFrame(data=total_carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["Packaging"]))
+        """
+        op_carbon_1 = op_carbon_1[:18]
+        emb_carbon = emb_carbon[:18]
+        emb_eco = np.sum(carbon_eco,axis=1) + np.sum(des_eco,axis=1)
+        ope_eco = np.sum(ope_eco,axis=1)
+        total_self = pd.DataFrame(data=zip(op_carbon_1,emb_carbon), index=combinations, columns=(["op","emb"]))
+        total_eco = pd.DataFrame(data=zip(ope_eco,emb_eco), index=combinations, columns=(["op","emb"]))
+        total_eco.plot(kind='bar', ax=ax, stacked=True, position=1, width = bar_width, align='edge')
+        total_self.plot(kind='bar', ax=ax, stacked=True, position=0, width = bar_width, align='edge')
+
+        ax.legend((["op","emb"]), loc='upper left')
+        ax.set_xticks(range(len(combinations))) 
+
+        ax.set_xlabel('node')
+        ax.set_ylabel('CO2 (g)')
+
+        for bar in ax.patches:
+            bar.set_edgecolor('black')  
+            bar.set_linewidth(1)      
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
+        
+        
         plt.show()
         """
+        
+        
 
     def yield_calc(self,area, defect_density):
         yield_val = (1+(defect_density*1e4)*(area*1e-6)/10)**-10
@@ -294,7 +347,7 @@ class CarbonEvaluation:
                     yields = self.yield_calc(sum(new_area), defect_density[0])
                     wastage_extra_cfp = self.waste_carbon_per_die(diameter=450,chip_area=sum(new_area),cpa_factors=cpa[0])
                     wastage_extra_cfp = (wastage_extra_cfp * router_area) / router_area.sum()
-                router_carbon = cpa*np.array(new_area) / yields + wastage_extra_cfp
+                router_carbon = cpa*np.array(new_area) / yields# + wastage_extra_cfp
                 design_carbon_per_chiplet, router_design = self.design_costs(new_area, 8, 10, 700, technology_node)
                 router_carbon, router_design = np.sum(router_carbon), np.sum(router_design)
                 if self.scme.package_type == 'passive':
@@ -387,7 +440,7 @@ class CarbonEvaluation:
         return design_cfp_total,mfg_cfp_total,eol_cfp_total,ope_cfp_total,app_cfp_total
     
 
-input_data = open_yaml("stream/inputs/testing/carbon_validation/Moffett.yaml")
+input_data = open_yaml("stream/inputs/testing/carbon_validation/GA102.yaml")
 area_dict = {item["type"]: item["area"] for item in input_data["area_list"]}
 
 hardware = CarbonModel(CI_op=input_data["CI_op"], 

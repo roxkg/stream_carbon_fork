@@ -1,48 +1,47 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
+# 创建示例数据
+categories = ["1", "2"]  # X 轴的类别
+labels_asic1 = ["Ope", "Mfg", "Des"]  # ASIC1 组成部分
+labels_asic2 = ["Des", "Mfg", "Eol","App-Dev"]  # ASIC2 组成部分
 
+values_asic1 = [160204952.8593164,22937670.693933833,5379.677266371265]  # ASIC1 各部分数据
+values_asic2 = [5379.677266371265, 22937670.693933833, 780.0, 50.4]  # ASIC2 各部分数据
 
-# 示例数据
-categories = ['1', '3', '5', '7', '8']  # 横轴类别 (Num Apps)
-num_categories = len(categories)
+# 设定颜色（匹配示例图片）
+colors_asic1 = ["blue", "orange", "green"]  # ASIC1 部分颜色
+colors_asic2 = ["green", "orange","red","yellow"]  # ASIC2 部分颜色
 
-# 生成数据（示例）
-fpga_oc = np.array([10, 20, 30, 40, 50]) * 1e6  # FPGA Operational Carbon
-fpga_ec = np.array([15, 25, 35, 45, 55]) * 1e6  # FPGA Embodied Carbon
-asic_oc = np.array([5, 10, 15, 20, 25]) * 1e6   # ASIC Operational Carbon
+# 创建画布
+fig, ax = plt.subplots(figsize=(8, 6))
+ax2 = ax.twinx()
+# **绘制 ASIC1**
+legend_handles = {}
+bottom_asic1 = 0  # 初始堆叠底部
+x1 = 0  # ASIC1 的 X 位置
+for i, val in enumerate(values_asic1):
+    bar = ax.bar(x1, val, color=colors_asic1[i], edgecolor="black", width=0.6, bottom=bottom_asic1, label=labels_asic1[i] if i == 0 else "")
+    bottom_asic1 += val  # 更新底部位置
+    legend_handles[labels_asic1[i]] = bar[0]
 
-# 另一组数据 (App Lifetime 对应的另一组数据)
-fpga_oc_2 = np.array([35, 30, 25, 40, 45]) * 1e6
-fpga_ec_2 = np.array([20, 25, 30, 35, 40]) * 1e6
-asic_oc_2 = np.array([8, 12, 18, 22, 28]) * 1e6
+# **绘制 ASIC2**
+bottom_asic2 = 0  # 初始堆叠底部
+x2 = 1  # ASIC2 的 X 位置
+for i, val in enumerate(values_asic2):
+    bar = ax2.bar(x2, val, color=colors_asic2[i], edgecolor="black", width=0.6, bottom=bottom_asic2, label=labels_asic2[i] if i == 0 else "")
+    bottom_asic2 += val  # 更新底部位置
+    legend_handles[labels_asic2[i]] = bar[0]
 
-# 设定柱状图的宽度
-bar_width = 0.3  
-x = np.arange(num_categories)  # X 轴刻度位置
+# **设置 X 轴和 Y 轴标签**
+ax.set_ylabel("Eq. kgs of CO₂", fontsize=12)
+ax.set_xlabel("")
+ax.set_xticks([x1, x2])
+ax.set_xticklabels(categories, fontsize=12)
 
-# 创建图表
-fig, ax = plt.subplots(figsize=(8, 5))
-
-# 绘制左边柱状图 (Num Apps)
-ax.bar(x - bar_width/2, fpga_ec, width=bar_width, label="FPGA EC", color="purple", edgecolor ='grey')
-ax.bar(x - bar_width/2, fpga_oc, width=bar_width, bottom=fpga_ec, label="FPGA OC", color="gold",edgecolor ='grey')
-ax.bar(x - bar_width/2, asic_oc, width=bar_width, bottom=fpga_ec + fpga_oc, label="ASIC OC", color="lightgreen", edgecolor ='grey')
-
-# 绘制右边柱状图 (App Lifetime)
-ax.bar(x + bar_width/2, fpga_ec_2, width=bar_width, color="purple", edgecolor ='grey')
-ax.bar(x + bar_width/2, fpga_oc_2, width=bar_width, bottom=fpga_ec_2, color="gold", edgecolor ='grey')
-ax.bar(x + bar_width/2, asic_oc_2, width=bar_width, bottom=fpga_ec_2 + fpga_oc_2, color="lightgreen", edgecolor ='grey')
-
-# 设置 X 轴
-ax.set_xticks(x)
-ax.set_xticklabels(categories)
-ax.set_xlabel("Num Apps / App Lifetime")
-ax.set_ylabel("Eq. Kgs of CO₂")
-ax.set_yscale("linear")  # 也可以尝试对数刻度 `log`
-
-# 添加图例
-ax.legend()
-
+# **自定义图例**
+ax.legend(legend_handles.values(), legend_handles.keys(), loc="upper left", fontsize=10, frameon=True)
+ax2.set_ylim(0, min(bottom_asic1, bottom_asic2) * 1.2)
 # 显示图表
 plt.show()
