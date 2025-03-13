@@ -5,3 +5,4 @@ lifetime: 5
 # GHz
 frequency: 1.8
 technology_node: 14
+on_ratio: 0.2

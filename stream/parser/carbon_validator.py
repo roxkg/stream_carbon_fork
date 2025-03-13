@@ -14,6 +14,7 @@ class CarbonValidator:
         "lifetime": {"type": "integer", "default": 0},
         "frequency":{"type": "float", "default": 1},
         "technology_node":{"type": "int", "default": 28, "min": 7, "max": 28},
+        "on_ratio":{"type": "float", "min": 0, "max": 1}
     }
     
     def __init__(self, data: Any, carbon_path: str):
