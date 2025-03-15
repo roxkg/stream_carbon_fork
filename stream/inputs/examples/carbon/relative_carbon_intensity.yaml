@@ -6,3 +6,4 @@ lifetime: 5
 frequency: 1.8
 technology_node: 14
 on_ratio: 0.2
+package_type: "RDL"

@@ -13,8 +13,9 @@ class CarbonValidator:
         "CI_em": {"type": "string", "allowed": ["Coal", "Gas", "Biomass", "Solar", "Geothermal", "Hydropower", "Nuclear", "Wind"]},
         "lifetime": {"type": "integer", "default": 0},
         "frequency":{"type": "float", "default": 1},
-        "technology_node":{"type": "int", "default": 28, "min": 7, "max": 28},
-        "on_ratio":{"type": "float", "min": 0, "max": 1}
+        "technology_node":{"type": "integer", "default": 28, "min": 7, "max": 28},
+        "on_ratio":{"type": "float", "min": 0, "max": 1}, 
+        "package_type":{"type": "string", "allowed": ["RDL", "active", "3D", "passive" ,"EMIB"]}
     }
     
     def __init__(self, data: Any, carbon_path: str):
