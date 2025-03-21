@@ -1,0 +1,204 @@
+name: ascend_like
+
+memories:
+  rf_1B:
+    size: 8
+    r_cost: 0.01
+    w_cost: 0.01
+    area: 0
+    latency: 1
+    operands: [I2]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I2, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I2, fh
+    served_dimensions: [D3, D4]
+
+  rf_2B:
+    size: 16
+    r_cost: 0.02
+    w_cost: 0.02
+    area: 0
+    latency: 1
+    operands: [O]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, tl
+      - name: r_port_2
+        type: read
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, th
+      - name: w_port_1
+        type: write
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, fh
+      - name: w_port_2
+        type: write
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, fl
+    served_dimensions: [D2]
+
+  rf_64KB_I:
+    size: 65536
+    r_cost: 26.56
+    w_cost: 30.72
+    area: 0
+    latency: 1
+    operands: [I1]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 64
+        bandwidth_max: 512
+        allocation: 
+          - I1, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 64
+        bandwidth_max: 512
+        allocation: 
+          - I1, fh
+    served_dimensions: [D1, D2, D3, D4]
+
+  rf_64KB_W:
+    size: 65536
+    r_cost: 50.16
+    w_cost: 108.0
+    area: 0
+    latency: 1
+    operands: [I2]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 64
+        bandwidth_max: 2048
+        allocation: 
+          - I2, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 64
+        bandwidth_max: 2048
+        allocation: 
+          - I2, fh
+    served_dimensions: [D1, D2, D3, D4]
+
+  sram_256KB_O:
+    size: 2097152
+    r_cost: 123.2
+    w_cost: 212.8
+    area: 0
+    latency: 1
+    operands: [O]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 64
+        bandwidth_max: 2048
+        allocation: 
+          - O, tl
+          - O, th
+      - name: w_port_1
+        type: write
+        bandwidth_min: 64
+        bandwidth_max: 2048
+        allocation: 
+          - O, fh
+          - O, fl
+    served_dimensions: [D1, D2, D3, D4]
+
+  sram_1MB_A:
+    size: 8388608
+    r_cost: 465.6
+    w_cost: 825.6
+    area: 0
+    latency: 1
+    operands: [I1, O]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 64
+        bandwidth_max: 4096
+        allocation: 
+          - I1, tl
+          - O, tl
+          - O, th
+      - name: w_port_1
+        type: write
+        bandwidth_min: 64
+        bandwidth_max: 4096
+        allocation: 
+          - I1, fh
+          - O, fh
+          - O, fl
+    served_dimensions: [D1, D2, D3, D4]
+
+  sram_1MB_W:
+    size: 8388608
+    r_cost: 465.6
+    w_cost: 825.6
+    area: 0
+    latency: 1
+    operands: [I2]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 64
+        bandwidth_max: 4096
+        allocation: 
+          - I2, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 64
+        bandwidth_max: 4096
+        allocation: 
+          - I2, fh
+    served_dimensions: [D1, D2, D3, D4]
+
+  dram:
+    size: 10000000000
+    r_cost: 700
+    w_cost: 750
+    area: 0
+    latency: 1
+    operands: [I1, I2, O]
+    ports:
+      - name: rw_port_1
+        type: read_write
+        bandwidth_min: 64
+        bandwidth_max: 64
+        allocation: 
+          - I1, fh
+          - I1, tl
+          - I2, fh
+          - I2, tl
+          - O, fh
+          - O, tl
+          - O, fl
+          - O, th
+    served_dimensions: [D1, D2]
+
+operational_array:
+  input_precision: [8, 8]
+  unit_energy: 0.04 # pJ
+  unit_area: 1 # unit
+  dimensions: [D1, D2, D3, D4]
+  sizes: [16, 16, 2, 2]

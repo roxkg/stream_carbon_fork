@@ -1,0 +1,135 @@
+name: edge_tpu_like
+
+memories:
+  rf_1B:
+    size: 8
+    r_cost: 0.01
+    w_cost: 0.01
+    area: 0
+    latency: 1
+    operands: [I2]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I2, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I2, fh
+    served_dimensions: [D3, D4]
+
+  rf_2B:
+    size: 16
+    r_cost: 0.02
+    w_cost: 0.02
+    area: 0
+    latency: 1
+    operands: [O]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, tl
+      - name: r_port_2
+        type: read
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, th
+      - name: w_port_1
+        type: write
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, fh
+      - name: w_port_2
+        type: write
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, fl
+    served_dimensions: [D2]
+
+  sram_32KB:
+    size: 262144
+    r_cost: 22.9
+    w_cost: 52.01
+    area: 0
+    latency: 1
+    operands: [I2]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 64
+        bandwidth_max: 512
+        allocation: 
+          - I2, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 64
+        bandwidth_max: 512
+        allocation: 
+          - I2, fh
+    served_dimensions: [D1, D2, D3, D4]
+
+  sram_2MB:
+    size: 16777216
+    r_cost: 416.16
+    w_cost: 378.4
+    area: 0
+    latency: 1
+    operands: [I1, O]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 64
+        bandwidth_max: 2048
+        allocation: 
+          - I1, tl
+          - O, tl
+          - O, th
+      - name: w_port_1
+        type: write
+        bandwidth_min: 64
+        bandwidth_max: 2048
+        allocation: 
+          - I1, fh
+          - O, fh
+          - O, fl
+    served_dimensions: [D1, D2, D3, D4]
+
+  dram:
+    size: 10000000000
+    r_cost: 700
+    w_cost: 750
+    area: 0
+    latency: 1
+    operands: [I1, I2, O]
+    ports:
+      - name: rw_port_1
+        type: read_write
+        bandwidth_min: 64
+        bandwidth_max: 64
+        allocation: 
+          - I1, fh
+          - I1, tl
+          - I2, fh
+          - I2, tl
+          - O, fh
+          - O, tl
+          - O, fl
+          - O, th
+    served_dimensions: [D1, D2, D3, D4]
+
+operational_array:
+  unit_energy: 0.04 # pJ
+  unit_area: 1 # unit
+  dimensions: [D1, D2, D3, D4]
+  sizes: [8, 8, 4, 4]

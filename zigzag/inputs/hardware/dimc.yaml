@@ -1,0 +1,132 @@
+name: dimc
+
+memories:
+  cells:
+    size: 8
+    r_cost: 0
+    w_cost: 0.095
+    area: 0
+    latency: 0
+    operands: [I2]
+    ports:
+      - name: rw_port_1
+        type: read_write
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I2, fh
+          - I2, tl
+    served_dimensions: [] # Fully unrolled over all multipliers
+
+  rf_1B:
+    size: 8
+    r_cost: 0.021
+    w_cost: 0.021
+    area: 0
+    latency: 1
+    operands: [I1]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I1, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I1, fh
+    served_dimensions: [D1]
+
+  rf_2B:
+    size: 16
+    r_cost: 0.021
+    w_cost: 0.021
+    area: 0
+    latency: 1
+    operands: [O]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, tl
+      - name: r_port_2
+        type: read
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, th
+      - name: w_port_1
+        type: write
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, fh
+      - name: w_port_2
+        type: write
+        bandwidth_min: 16
+        bandwidth_max: 16
+        allocation: 
+          - O, fl
+    served_dimensions: [D2]
+
+  sram_256KB:
+    size: 262144
+    r_cost: 416.16
+    w_cost: 378.4
+    area: 0
+    latency: 1
+    operands: [I1, O]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 64
+        bandwidth_max: 512
+        allocation: 
+          - I1, tl
+          - O, tl
+          - O, th
+      - name: w_port_1
+        type: write
+        bandwidth_min: 64
+        bandwidth_max: 512
+        allocation: 
+          - I1, fh
+          - O, fh
+          - O, fl
+    served_dimensions: [D1, D2]
+
+  dram:
+    size: 10000000000
+    r_cost: 700
+    w_cost: 750
+    area: 0
+    latency: 1
+    operands: [I1, I2, O]
+    ports:
+      - name: rw_port_1
+        type: read_write
+        bandwidth_min: 64
+        bandwidth_max: 64
+        allocation: 
+          - I1, fh
+          - I1, tl
+          - I2, fh
+          - I2, tl
+          - O, fh
+          - O, tl
+          - O, fl
+          - O, th
+    served_dimensions: [D1, D2]
+
+operational_array:
+  is_imc: True
+  imc_type: digital
+  input_precision: [8, 8] # unit: bit
+  bit_serial_precision: 1 # unit: bit
+  dimensions: [D1, D2]
+  sizes: [128, 128]

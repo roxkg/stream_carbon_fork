@@ -1,0 +1,161 @@
+name: eyeriss_like
+
+memories:
+  rf_64B_A:
+    size: 512
+    r_cost: 1.0
+    w_cost: 1.5
+    area: 0.3
+    latency: 1
+    operands: [I1]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I1, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I1, fh
+    served_dimensions: []
+
+  rf_64B_W:
+    size: 512
+    r_cost: 1.0
+    w_cost: 1.5
+    area: 0.3
+    latency: 1
+    operands: [I2]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I2, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 8
+        bandwidth_max: 8
+        allocation: 
+          - I2, fh
+    served_dimensions: []
+
+  rf_16B:
+    size: 128
+    r_cost: 1.5
+    w_cost: 2.0
+    area: 0.95
+    latency: 1
+    operands: [O]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 24
+        bandwidth_max: 24
+        allocation: 
+          - O, tl
+          - O, th
+      - name: w_port_1
+        type: write
+        bandwidth_min: 24
+        bandwidth_max: 24
+        allocation: 
+          - O, fh
+          - O, fl
+    served_dimensions: []
+
+  sram_8KB:
+    size: 65536
+    r_cost: 10.0
+    w_cost: 15.0
+    area: 3
+    latency: 1
+    operands: [O]
+    ports:
+      - name: rw_port_1
+        type: read_write
+        bandwidth_min: 128
+        bandwidth_max: 128
+        allocation: 
+          - O, fh
+          - O, tl
+          - O, fl
+          - O, th
+    served_dimensions: [D1, D2]
+
+  sram_64KB:
+    size: 524288
+    r_cost: 20
+    w_cost: 25
+    area: 6
+    latency: 1
+    operands: [I2]
+    ports:
+      - name: r_port_1
+        type: read
+        bandwidth_min: 128
+        bandwidth_max: 128
+        allocation: 
+          - I2, tl
+      - name: w_port_1
+        type: write
+        bandwidth_min: 128
+        bandwidth_max: 128
+        allocation: 
+          - I2, fh
+    served_dimensions: [D1, D2]
+
+  sram_1M:
+    size: 8388608
+    r_cost: 100
+    w_cost: 130
+    area: 25
+    latency: 1
+    operands: [I1, O]
+    ports:
+      - name: rw_port_1
+        type: read_write
+        bandwidth_min: 384
+        bandwidth_max: 384
+        allocation: 
+          - I1, fh
+          - I1, tl
+          - O, fh
+          - O, tl
+          - O, fl
+          - O, th
+    served_dimensions: [D1, D2]
+
+  dram:
+    size: 10000000000
+    r_cost: 1000
+    w_cost: 1000
+    area: 0
+    latency: 1
+    operands: [I1, I2, O]
+    ports:
+      - name: rw_port_1
+        type: read_write
+        bandwidth_min: 64
+        bandwidth_max: 64
+        allocation: 
+          - I1, fh
+          - I1, tl
+          - I2, fh
+          - I2, tl
+          - O, fh
+          - O, tl
+          - O, fl
+          - O, th
+    served_dimensions: [D1, D2]
+
+operational_array:
+  unit_energy: 0.5 # pJ
+  unit_area: 0.1 # unit
+  dimensions: [D1, D2]
+  sizes: [14, 12]
