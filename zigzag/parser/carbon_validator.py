@@ -4,7 +4,7 @@ from typing import Any
 
 from cerberus import Validator
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(_name_)
 
 class CarbonValidator: 
     INPUT_DIR_LOCATION = "zigzag/inputs/"
@@ -18,7 +18,7 @@ class CarbonValidator:
         "package_type":{"type": "string", "allowed": ["RDL", "active", "3D", "passive" ,"EMIB"]}
     }
     
-    def __init__(self, data: Any, carbon_path: str):
+    def _init_(self, data: Any, carbon_path: str):
         self.validator = Validator()
         self.validator.schema = CarbonValidator.SCHEMA
         self.data: dict[str, Any] = self.validator.normalized(data)

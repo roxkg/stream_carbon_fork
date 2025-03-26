@@ -131,34 +131,34 @@ class MinimalEDPStage(Stage):
 
 class MinimalCarbonStage(Stage): 
     """
-        carbon optimization stage    
+        carbon optimization stage
     """
     def __init__(
             self, 
-            list_of_callables: list[StageCallable],
-            *, 
+            list_of_callables: list[StageCallable], 
+            *,
             reduce_minimal_keep_others: bool = False, 
             **kwargs: Any, 
-    ):
+    ): 
         super().__init__(list_of_callables, **kwargs)
         self.keep_others = reduce_minimal_keep_others
-    
+
     def run(self): 
-        sub_list_of_callables = self.list_of_callables[1: ]
+        sub_list_of_callables = self.list_of_callables[1:]
         substage: Stage = self.list_of_callables[0](sub_list_of_callables, **self.kwargs)
 
         other_cmes: list[tuple[CostModelEvaluation, Any]] = []
-        best_cme: CostModelEvaluation | None = None 
-        for cme, extra_info in substage.run(): 
+        best_cme: CostModelEvaluation | None = None
+        for cme, extra_info in substage.run():
             assert isinstance(cme, CostModelEvaluation)
-            if (
+            if(
                 best_cme is None
                 or cme.carbon_total < best_cme.carbon_total
             ): 
-                best_cme = cme
+                best_cme = cme 
             if self.keep_others: 
                 other_cmes.append((cme, extra_info))
-        assert best_cme is not None 
+        assert best_cme is not None
         yield best_cme, other_cmes
 
 

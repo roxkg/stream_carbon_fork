@@ -34,6 +34,8 @@ class Accelerator:
         operational_array: OperationalArrayABC,
         memory_hierarchy: MemoryHierarchy,
         dataflows: SpatialMapping | None = None,
+        noc_area: float | None = None,
+        core_area: float | None = None
     ):
         self.id = core_id
         self.name = name
@@ -42,6 +44,8 @@ class Accelerator:
         self.mem_hierarchy_dict = {}
 
         self.dataflows = dataflows
+        self.noc_area = noc_area
+        self.core_area = core_area
         self.recalculate_memory_hierarchy_information()
 
     def get_memory_level(self, mem_op: MemoryOperand, mem_lv: int) -> MemoryLevel:
@@ -68,6 +72,26 @@ class Accelerator:
             ]
             self.mem_size_dict[mem_op] = [
                 node.memory_instance.size
+                for node in self.memory_hierarchy.topological_sort()
+                if mem_op in node.operands
+            ]
+            self.mem_r_bw_dict[mem_op] = [
+                node.memory_instance.r_bw
+                for node in self.memory_hierarchy.topological_sort()
+                if mem_op in node.operands
+            ]
+            self.mem_w_bw_dict[mem_op] = [
+                node.memory_instance.w_bw
+                for node in self.memory_hierarchy.topological_sort()
+                if mem_op in node.operands
+            ]
+            self.mem_r_bw_min_dict[mem_op] = [
+                node.memory_instance.r_bw_min
+                for node in self.memory_hierarchy.topological_sort()
+                if mem_op in node.operands
+            ]
+            self.mem_w_bw_min_dict[mem_op] = [
+                node.memory_instance.w_bw_min
                 for node in self.memory_hierarchy.topological_sort()
                 if mem_op in node.operands
             ]

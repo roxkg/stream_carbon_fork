@@ -3,7 +3,7 @@ import re
 
 from stream.api import optimize_allocation_ga
 from stream.utils import CostModelEvaluationLUT
-from stream.stages.carbon.carbon_evaluation import calculate_carbon
+from stream.stages.carbon.carbon_evaluation_multicore import calculate_carbon
 from stream.visualization.memory_usage import plot_memory_usage
 from stream.visualization.perfetto import convert_scme_to_perfetto_json
 from stream.visualization.schedule import (
@@ -15,7 +15,7 @@ _logging_format = "%(asctime)s - %(name)s.%(funcName)s +%(lineno)s - %(levelname
 _logging.basicConfig(level=_logging_level, format=_logging_format)
 
 ############################################INPUTS############################################
-accelerator = "stream/inputs/examples/hardware/simba.yaml"
+accelerator = "stream/inputs/examples/hardware/carbon/simba.yaml"
 carbon_path = "stream/inputs/examples/carbon/relative_carbon_intensity.yaml"
 workload_path = "stream/inputs/examples/workload/resnet18.onnx"
 mapping_path = "stream/inputs/examples/mapping/simba.yaml"
@@ -75,10 +75,16 @@ visualize_timeline_plotly(
     fig_path=timeline_fig_path_plotly,
     cost_lut=cost_lut,
 )
-calculate_carbon(scme)
+calculate_carbon(scme, False)
+# calculate_carbon(scme, True)
+
+
+"""
 print(f"total delay = {scme.latency} cycles\ntotal energy = {scme.energy} pJ\n")
 # Plotting memory usage of best SCME
 plot_memory_usage(scme, section_start_percent, percent_shown, fig_path=memory_fig_path)
 
 # Save json for perfetto visualization (Visualize at http://ui.perfetto.dev/)
 convert_scme_to_perfetto_json(scme, cost_lut, json_path=json_path)
+"""
+

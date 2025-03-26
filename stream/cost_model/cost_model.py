@@ -38,6 +38,7 @@ class StreamCostModelEvaluation:
         self.total_core_to_core_memory_energy: float | None = None
 
         self.latency: int | None = None
+        self.carbon: float | None = None
         self.area_total: int | None = None
         self.max_memory_usage = None
         self.core_timesteps_delta_cumsums = None
@@ -45,7 +46,7 @@ class StreamCostModelEvaluation:
         self.scheduling_order = scheduling_order
 
     def __str__(self):
-        return f"SCME(energy={self.energy:.2e}, latency={self.latency:.2e})"
+        return f"SCME(energy={self.energy:.2e}, latency={self.latency:.2e}, carbon={self.carbon:.2e})"
 
     def run(self):
         """Run the SCME by scheduling the graph through time.
@@ -81,8 +82,15 @@ class StreamCostModelEvaluation:
             + self.total_core_to_core_link_energy
             + self.total_core_to_core_memory_energy
         )
-        self.area_total, self.mem_area = self.collect_area_data()
 
+        lifespan = self.carbon_param.lifetime
+        frequency = self.carbon_param.frequency
+        taskspan = self.latency/(frequency*10**9)/3600
+        energy = self.energy/(10**12)/3600000
+        self.carbon = lifespan / taskspan * energy * self.carbon_param.CI_op
+        # self.area_total, self.mem_area = self.collect_area_data()
+
+    """
     def collect_area_data(self):
         area_total = 0
         # get mem area
@@ -103,6 +111,16 @@ class StreamCostModelEvaluation:
             # get total area
             area_total += mem_area
         return area_total, mem_area
+    """
+    def collect_area_data(self): 
+        area_total = 0 
+        noc_area = 0
+        core_area = 0
+        for core in self.accelerator.core_list: 
+            core_area += core.core_area
+            noc_area += core.noc_area
+            area_total = area_total + core_area + noc_area
+        return area_total, noc_area, core_area
 
     def plot_schedule(
         self,

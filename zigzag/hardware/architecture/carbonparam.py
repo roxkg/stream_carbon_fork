@@ -3,8 +3,7 @@ class CarbonParam:
     The CarbonParam class holds carbon intensity, lifetime, technology node and other parameteres
     related with accelerator itself. This is used in carbon efficiency optimization direction. 
     """
-
-    def __init__(
+    def _init_(
         self,
         CI_op: int, 
         CI_em: int, 
@@ -19,6 +18,4 @@ class CarbonParam:
         self.frequency = frequency
         self.technology_node = technology_node
         self.package_type = package_type
-
-    
         

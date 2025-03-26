@@ -53,7 +53,7 @@ class CostModelStage(Stage):
                 carbonparam=self.carbonparam,
                 access_same_data_considered_as_no_access=self.access_same_data_considered_as_no_access,
             )
-        else: 
+        else:
             cme = CostModelEvaluation(
                 accelerator=self.accelerator,
                 layer=self.layer,

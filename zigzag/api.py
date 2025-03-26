@@ -1,18 +1,16 @@
 import logging
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any
 
 from onnx import ModelProto
 
 from zigzag.cost_model.cost_model import CostModelEvaluationABC
-from zigzag.mapping.temporal_mapping import TemporalMappingType
 from zigzag.stages.evaluation.cost_model_evaluation import CostModelStage
 from zigzag.stages.exploit_data_locality_stages import (
     ExploitInterLayerDataLocalityStage,
     SearchInterLayerDataLocalityStage,
 )
 from zigzag.stages.main import MainStage
-from zigzag.stages.mapping.salsa import SalsaStage
 from zigzag.stages.mapping.spatial_mapping_generation import SpatialMappingGeneratorStage
 from zigzag.stages.mapping.temporal_mapping_generator_stage import TemporalMappingGeneratorStage
 from zigzag.stages.parser.accelerator_parser import AcceleratorParserStage
@@ -27,13 +25,11 @@ from zigzag.stages.workload_iterator import WorkloadStage
 
 
 def get_hardware_performance_zigzag(
-    workload: str | list[dict[str, Any]] | ModelProto,
+    workload: str | ModelProto,
     accelerator: str,
     carbon: str,
     mapping: str,
     *,
-    temporal_mapping_search_engine: Literal["loma"] | Literal["salsa"] = "loma",
-    temporal_mapping_type: Literal["uneven"] | Literal["even"] = "uneven",
     opt: str = "latency",
     dump_folder: str = f"outputs/{datetime.now()}",
     pickle_filename: str | None = None,
@@ -44,7 +40,7 @@ def get_hardware_performance_zigzag(
     enable_mix_spatial_mapping: bool = False,
 ) -> (
     tuple[float, float, float, list[tuple[CostModelEvaluationABC, Any]]]
-    | tuple[float, float, float, float, list[tuple[CostModelEvaluationABC, Any]]]
+    | tuple[float, float, float, float, float, list[tuple[CostModelEvaluationABC, Any]]]
 ):
     """! ZigZag API: estimates the cost of running the given workload on the given hardware architecture.
     @param workload Either a filepath to the workload ONNX or yaml file, an ONNX model.
@@ -83,7 +79,7 @@ def get_hardware_performance_zigzag(
     # Check workload format and based on it select the correct workload parser stage
     workload_parser_stage = (
         ONNXModelParserStage
-        if isinstance(workload, ModelProto) or (isinstance(workload, str) and workload.split(".")[-1] == "onnx")
+        if isinstance(workload, ModelProto) or (workload.split(".")[-1] == "onnx")
         else WorkloadParserStage
     )
 
@@ -91,15 +87,12 @@ def get_hardware_performance_zigzag(
     do_exploint_inter_layer_locality = in_memory_compute or exploit_data_locality or enable_mix_spatial_mapping
     # Whether `mixed` mappings (e.g. `D1: {K:8, C:4}`) can be generated
     do_mix_spatial_mapping_generation = in_memory_compute or enable_mix_spatial_mapping
-    # Select temporal mapping engine based on the function input
-    temporal_mapping_engine = SalsaStage if temporal_mapping_search_engine == "salsa" else TemporalMappingGeneratorStage
-    tm_type = TemporalMappingType(temporal_mapping_type)
 
     stages = [
         # Parse the ONNX Model into the workload
         workload_parser_stage,
-        # Parse the Carbon Model into the carbonparam
-        CarbonParamParserStage, 
+        # Parse the carbon model into the carbonparam
+        CarbonParamParserStage,
         # Parse the accelerator module/passthrough given accelerator
         AcceleratorParserStage,
         # Save the summed CME energy and latency to a json
@@ -125,7 +118,7 @@ def get_hardware_performance_zigzag(
         # Reduce all CMEs, returning minimal energy/latency one
         opt_stage,
         # Generate multiple temporal mappings (TM)
-        temporal_mapping_engine,
+        TemporalMappingGeneratorStage,
         # Evaluate generated SM and TM through cost model
         CostModelStage,
     ]
@@ -135,7 +128,7 @@ def get_hardware_performance_zigzag(
     # Initialize the MainStage as entry point
     mainstage = MainStage(
         list_of_callables=stage_callables,
-        carbon_path = carbon,
+        carbon_path = carbon, 
         accelerator=accelerator,
         workload=workload,
         mapping=mapping,
@@ -149,7 +142,6 @@ def get_hardware_performance_zigzag(
         # smaller than the memory read bw, # take into account only one-time access cost (assume the data can stay at
         # the output pins of the memory as long as it is needed).
         access_same_data_considered_as_no_access=True,
-        temporal_mapping_type=tm_type,
     )
 
     # Launch the MainStage

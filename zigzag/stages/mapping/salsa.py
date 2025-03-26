@@ -33,7 +33,6 @@ import multiprocessing_on_dill as multiprocessing  # type: ignore
 from zigzag.cost_model.cost_model import CostModelEvaluation
 from zigzag.hardware.architecture.accelerator import Accelerator
 from zigzag.mapping.spatial_mapping_internal import SpatialMappingInternal
-from zigzag.mapping.temporal_mapping import TemporalMappingType
 from zigzag.opt.salsa.engine import SalsaEngine
 from zigzag.stages.stage import Stage, StageCallable
 from zigzag.workload.layer_node import LayerNode
@@ -53,7 +52,6 @@ class SalsaStage(Stage):
         accelerator: Accelerator,
         layer: LayerNode,
         spatial_mapping: SpatialMappingInternal,
-        temporal_mapping_type: TemporalMappingType,
         **kwargs: Any,
     ):
         """
@@ -66,7 +64,6 @@ class SalsaStage(Stage):
             layer,
             spatial_mapping,
         )
-        self.mapping_type = temporal_mapping_type
         self.engine = None
         self.best_cme: CostModelEvaluation | None = None
 
@@ -92,7 +89,6 @@ class SalsaStage(Stage):
             accelerator=self.accelerator,
             layer=self.layer,
             spatial_mapping=self.spatial_mapping,
-            mapping_type=self.mapping_type,
             **self.kwargs,
         )
 

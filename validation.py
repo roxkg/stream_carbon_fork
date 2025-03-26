@@ -64,6 +64,7 @@ class CarbonEvaluation:
             op_carbon[n,:-1] = self.operational_costs(activity, comb, area*self.scme.energy_use/sum(area), self.scme.lifetime, 700)
             emb_carbon[n] = sum(carbon[n]) + (sum(design_carbon[n])*100/1e5)
             op_carbon_1[n:-1] = sum(op_carbon[n,:-1])
+        print(carbon)
         """
         #App-dev CFP
         app_dev_c = self.app_cfp(power_per_core=10, num_core=8, Carbon_per_kWh=700,

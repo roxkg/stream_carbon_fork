@@ -22,7 +22,7 @@ class CarbonParamParserStage(Stage):
     ):
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator
-        assert carbon_path.split(".")[-1] == "yaml", "Expected a yaml file as accelerator input"
+        assert carbon_path.split(".")[-1] == "yaml", "Expected a yaml file as carbon parameter input"
         # build CarbonParam based on input yaml
         carbon_data = open_yaml(carbon_path)
         validator = CarbonValidator(carbon_data, carbon_path)

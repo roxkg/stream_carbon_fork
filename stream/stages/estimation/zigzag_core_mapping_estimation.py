@@ -10,7 +10,7 @@ from zigzag.stages.evaluation.cost_model_evaluation import CostModelStage
 from zigzag.stages.main import MainStage
 from zigzag.stages.mapping.spatial_mapping_generation import SpatialMappingGeneratorStage
 from zigzag.stages.mapping.temporal_mapping_generator_stage import TemporalMappingGeneratorStage
-from zigzag.stages.results.reduce_stages import MinimalLatencyStage
+from zigzag.stages.results.reduce_stages import MinimalLatencyStage, MinimalCarbonStage
 from zigzag.utils import pickle_deepcopy
 
 from stream.hardware.architecture.accelerator import Accelerator
@@ -157,9 +157,9 @@ class ZigZagCoreMappingEstimationStage(Stage):
 
         main_stage = MainStage(
             [  # Initializes the MainStage as entry point
-                MinimalLatencyStage,
+                MinimalCarbonStage, # MinimalLatencyStage,
                 SpatialMappingGeneratorStage,  # Generates multiple spatial mappings (SM)
-                MinimalLatencyStage,  # Reduces all CMEs, returning minimal latency one
+                MinimalCarbonStage, #MinimalLatencyStage,  # Reduces all CMEs, returning minimal latency one
                 TemporalMappingGeneratorStage,  # Generates multiple temporal mappings (TM)
                 CostModelStage,  # Evaluates generated SM and TM through cost model
             ],
@@ -167,6 +167,7 @@ class ZigZagCoreMappingEstimationStage(Stage):
             accelerator=core,  # Accelerator in zigzag corresponds to Core in stream
             loma_lpf_limit=self.loma_lpf_limit,  # required by LomaEngine
             loma_show_progress_bar=self.loma_show_progress_bar,
+            carbonparam = self.carbon_param
         )
         return main_stage
 

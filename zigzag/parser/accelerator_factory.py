@@ -12,7 +12,7 @@ from zigzag.hardware.architecture.imc_array import ImcArray
 from zigzag.hardware.architecture.memory_hierarchy import MemoryHierarchy
 from zigzag.hardware.architecture.memory_instance import MemoryInstance
 from zigzag.hardware.architecture.memory_level import ServedMemDimensions
-from zigzag.hardware.architecture.memory_port import DataDirection, MemoryPort, MemoryPortType, PortAllocation
+from zigzag.hardware.architecture.memory_port import DataDirection, PortAllocation
 from zigzag.hardware.architecture.operational_array import (
     MultiplierArray,
     OperationalArrayABC,
@@ -59,6 +59,15 @@ class AcceleratorFactory:
                 mem_name, self.data["memories"][mem_name], shared_mem_group_id=shared_mem_group_id
             )
             memory_factory.add_memory_to_graph(mem_graph)
+        
+        if "noc_area" not in self.data: 
+            noc_area = 0
+        else:
+            noc_area = self.data["noc_area"]
+        if "core_area" not in self.data: 
+            core_area = 0
+        else:
+            core_area = self.data["core_area"]
 
         return Accelerator(
             core_id=core_id,
@@ -66,6 +75,8 @@ class AcceleratorFactory:
             operational_array=operational_array,
             memory_hierarchy=mem_graph,
             dataflows=dataflows,
+            noc_area=noc_area,
+            core_area=core_area
         )
 
     def create_operational_array(self) -> OperationalArrayABC:
@@ -76,8 +87,8 @@ class AcceleratorFactory:
         op_array_data: dict[str, Any] = self.data["operational_array"]
 
         multiplier = Multiplier(
-            energy_cost=op_array_data["unit_energy"],
-            area=op_array_data["unit_area"],
+            energy_cost=op_array_data["multiplier_energy"],
+            area=op_array_data["multiplier_area"],
         )
         oa_dims: list[str] = op_array_data["dimensions"]
         dimension_sizes: dict[OADimension, int] = {
@@ -150,31 +161,23 @@ class MemoryFactory:
         self.data = mem_data
         self.name = name
         self.shared_mem_group_id = shared_mem_group_id
-        self.memory_ports = None
-
-    def create_memory_ports(self) -> tuple[MemoryPort, ...]:
-        """Create the memory ports for the memory instance."""
-        memory_ports: list[MemoryPort] = []
-        for port_data in self.data["ports"]:
-            port_name = port_data["name"]
-            port_bw_min = port_data["bandwidth_min"]
-            port_bw_max = port_data["bandwidth_max"]
-            port_type = MemoryPortType(port_data["type"])
-            port = MemoryPort(port_name, port_type, port_bw_min, port_bw_max)
-            memory_ports.append(port)
-        return tuple(memory_ports)
 
     def create_memory_instance(self) -> MemoryInstance:
-        memory_ports = self.create_memory_ports()
         return MemoryInstance(
             name=self.name,
             size=self.data["size"],
             mem_type=self.data["mem_type"],
+            r_bw=self.data["r_bw"],
+            w_bw=self.data["w_bw"],
             r_cost=self.data["r_cost"],
             w_cost=self.data["w_cost"],
             area=self.data["area"],
+            r_port=self.data["r_port"],
+            w_port=self.data["w_port"],
+            rw_port=self.data["rw_port"],
             latency=self.data["latency"],
-            ports=memory_ports,
+            min_r_granularity=self.data["min_r_granularity"],
+            min_w_granularity=self.data["min_w_granularity"],
             auto_cost_extraction=self.data["auto_cost_extraction"],
             shared_memory_group_id=self.shared_mem_group_id,
         )
@@ -202,16 +205,16 @@ class MemoryFactory:
         """The order of the port allocations matches the order of the MemoryOperands.
         # TODO support empty allocation -> return default configuration
         """
-        allocation_data: dict[MemoryOperand, dict[DataDirection, str]]
-        allocation_data = {MemoryOperand(mem_op_str): {} for mem_op_str in self.data["operands"]}
-        for port in self.data["ports"]:
-            name = port["name"]
-            for alloc in port["allocation"]:
-                operand, data_dir = alloc.split(", ")
-                operand = MemoryOperand(operand)
-                direction = DataDirection(self.translate_to_data_direction(data_dir))
-                allocation_data[operand][direction] = name
-        return PortAllocation(allocation_data)
+        port_data: list[dict[str, str]] = self.data["ports"]
+
+        data: dict[MemoryOperand, dict[DataDirection, str]] = {
+            MemoryOperand(mem_op_str): {
+                self.translate_to_data_direction(direction): port_name
+                for direction, port_name in port_data[idx].items()
+            }
+            for idx, mem_op_str in enumerate(self.data["operands"])
+        }
+        return PortAllocation(data)
 
     def create_default_port_allocation(self) -> PortAllocation:
         data: dict[MemoryOperand, dict[DataDirection, str]] = dict()

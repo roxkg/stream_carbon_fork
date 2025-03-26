@@ -7,18 +7,18 @@ from zigzag.parser.carbon_validator import CarbonValidator
 from zigzag.parser.carbon_factory import CarbonFactory
 from zigzag.stages.stage import Stage, StageCallable
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(_name_)
 
 class CarbonParamParserStage(Stage): 
     """Parse to parse carbon parameter from a user-defined yaml file."""
     
-    def __init__(self, 
+    def _init_(self, 
         list_of_callables: list[StageCallable], 
         *, 
         carbon_path: str,
         **kwargs: Any,
     ):
-        super().__init__(list_of_callables, **kwargs)
+        super()._init_(list_of_callables, **kwargs)
         assert carbon_path.split(".")[-1] == "yaml", "Expected a yaml file as accelerator input"
         # build CarbonParam based on input yaml
         carbon_data = open_yaml(carbon_path)

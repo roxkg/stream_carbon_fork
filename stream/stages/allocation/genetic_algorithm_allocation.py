@@ -123,7 +123,7 @@ class GeneticAlgorithmAllocationStage(Stage):
         if self.individual_length == 0:
             logger.info("Evaluating fixed layer-core allocation.")
             core_allocations = []
-            (energy, latency, scme) = self.fitness_evaluator.get_fitness(core_allocations, return_scme=True)
+            (energy, latency, carbon, scme) = self.fitness_evaluator.get_fitness(core_allocations, return_scme=True)
             yield scme, None
         else:
             # Initialize the genetic algorithm
