@@ -19,6 +19,7 @@ class StreamCostModelEvaluation:
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
         carbon_param: CarbonParam,
+        embodied_carbon: float,
         operands_to_prefetch: list[LayerOperand],
         scheduling_order: list[tuple[int, int]],
     ) -> None:
@@ -26,6 +27,7 @@ class StreamCostModelEvaluation:
         self.workload = workload
         self.accelerator = accelerator
         self.carbon_param = carbon_param
+        self.embodied_carbon = embodied_carbon
         self.energy: float | None = None
         self.total_cn_onchip_energy: float | None = None
         self.total_cn_offchip_link_energy: float | None = None
@@ -39,6 +41,8 @@ class StreamCostModelEvaluation:
 
         self.latency: int | None = None
         self.carbon: float | None = None
+        self.CD: float | None = None
+        self.ED: float | None = None
         self.area_total: int | None = None
         self.max_memory_usage = None
         self.core_timesteps_delta_cumsums = None
@@ -88,6 +92,8 @@ class StreamCostModelEvaluation:
         taskspan = self.latency/(frequency*10**9)/3600
         energy = self.energy/(10**12)/3600000
         self.carbon = lifespan / taskspan * energy * self.carbon_param.CI_op
+        self.CD = self.embodied_carbon /lifespan * taskspan * taskspan
+        self.ED = energy * taskspan
         # self.area_total, self.mem_area = self.collect_area_data()
 
     """

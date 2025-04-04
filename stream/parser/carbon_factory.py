@@ -23,3 +23,5 @@ class CarbonFactory:
         CI_op = carbon_intensity_data.get(src_op, 0)
         return CarbonParam(CI_em= CI_em, CI_op= CI_op, lifetime= self.data["lifetime"]*self.data["on_ratio"], 
                            frequency=self.data["frequency"], technology_node=self.data["technology_node"], package_type=self.data["package_type"])
+
+    

@@ -53,6 +53,7 @@ scme = optimize_allocation_ga(
     hardware=accelerator,
     workload=workload_path,
     carbon=carbon_path,
+    is_chiplet= False,
     mapping=mapping_path,
     mode=mode,
     layer_stacks=layer_stacks,
@@ -75,7 +76,7 @@ visualize_timeline_plotly(
     fig_path=timeline_fig_path_plotly,
     cost_lut=cost_lut,
 )
-calculate_carbon(scme, False)
+# calculate_carbon(scme, False)
 # calculate_carbon(scme, True)
 
 

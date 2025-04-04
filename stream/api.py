@@ -58,6 +58,7 @@ def _sanity_check_gurobi_license():
 def optimize_allocation_ga(
     hardware: str,
     carbon: str,
+    is_chiplet: bool,
     workload: str,
     mapping: str,
     mode: Literal["lbl"] | Literal["fused"], # two mode: layer by layer, layer fused
@@ -101,6 +102,7 @@ def optimize_allocation_ga(
             ],
             accelerator=hardware,  # required by AcceleratorParserStage
             carbon_path=carbon, #required by CarbonParamParserStage
+            is_chiplet=is_chiplet,
             workload_path=workload,  # required by ModelParserStage
             mapping_path=mapping,  # required by ModelParserStage
             loma_lpf_limit=6,  # required by LomaEngine

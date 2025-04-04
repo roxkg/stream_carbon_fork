@@ -15,11 +15,13 @@ class FitnessEvaluator:
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
         carbon_param: CarbonParam,
+        embodied_carbon: float,
         cost_lut: CostModelEvaluationLUT,
     ) -> None:
         self.workload = workload
         self.accelerator = accelerator
         self.carbon_param = carbon_param
+        self.embodied_carbon= embodied_carbon
         self.cost_lut = cost_lut
         # self.num_cores = len(inputs.accelerator.cores)
 
@@ -35,18 +37,21 @@ class StandardFitnessEvaluator(FitnessEvaluator):
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
         carbon_param: CarbonParam,
+        embodied_carbon: float, 
         cost_lut: CostModelEvaluationLUT,
         layer_groups_flexible,
         operands_to_prefetch: list[LayerOperand],
         scheduling_order: list[tuple[int, int]],
     ) -> None:
-        super().__init__(workload, accelerator, carbon_param, cost_lut)
+        super().__init__(workload, accelerator, carbon_param, embodied_carbon, cost_lut)
 
         # self.weights = (-1.0, -1.0, 0)
         #self.weights = (-1.0, )
         #self.metrics = ["carbon", "energy", "latency", ]
-        self.weights = (-1.0,)
-        self.metrics = ["carbon"]
+        #self.weights = (-1.0,)
+        #self.metrics = ["carbon"]
+        self.weights = (-1.0, -1.0)
+        self.metrics = ["CD", "ED"]
         self.layer_groups_flexible = layer_groups_flexible
         self.operands_to_prefetch = operands_to_prefetch
         self.scheduling_order = scheduling_order
@@ -62,6 +67,7 @@ class StandardFitnessEvaluator(FitnessEvaluator):
             pickle_deepcopy(self.workload),
             pickle_deepcopy(self.accelerator),
             pickle_deepcopy(self.carbon_param),
+            pickle_deepcopy(self.embodied_carbon),
             self.operands_to_prefetch,
             self.scheduling_order,
         )
@@ -69,12 +75,19 @@ class StandardFitnessEvaluator(FitnessEvaluator):
         #energy = scme.energy
         #latency = scme.latency
         carbon = scme.carbon
+        CD = scme.CD
+        ED = scme.ED
         # if not return_scme:
         #     return energy, latency, carbon
         # return energy, latency, carbon, scme
+        """
         if not return_scme:
             return (carbon,)
         return (carbon,) , scme
+        """
+        if not return_scme:
+            return CD,ED
+        return CD,ED , scme
 
     def set_node_core_allocations(self, core_allocations: list[int]):
         """Sets the core allocation of all nodes in self.workload according to core_allocations.

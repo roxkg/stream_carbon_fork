@@ -36,6 +36,7 @@ class GeneticAlgorithmAllocationStage(Stage):
         workload: ComputationNodeWorkload,
         accelerator: Accelerator,
         carbon_param: CarbonParam,
+        embodied_carbon: float,
         cost_lut: CostModelEvaluationLUT,
         nb_ga_generations: int,
         nb_ga_individuals: int,
@@ -57,6 +58,7 @@ class GeneticAlgorithmAllocationStage(Stage):
         self.workload = workload
         self.accelerator = accelerator
         self.carbon_param =carbon_param
+        self.embodied_carbon = embodied_carbon
         self.cost_lut = cost_lut
         self.nb_generations = nb_ga_generations
         self.nb_individuals = nb_ga_individuals
@@ -97,6 +99,7 @@ class GeneticAlgorithmAllocationStage(Stage):
             self.workload,
             self.accelerator,
             self.carbon_param,
+            self.embodied_carbon,
             self.cost_lut,
             self.layer_groups_flexible,
             self.operands_to_prefetch,

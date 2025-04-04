@@ -19,6 +19,9 @@ class CarbonParam:
         self.frequency = frequency
         self.technology_node = technology_node
         self.package_type = package_type
+        self.mfg_carbon = 0
+        self.design_carbon = 0
+        self.package_carbon = 0
 
     
         
