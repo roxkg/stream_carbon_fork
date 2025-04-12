@@ -658,6 +658,9 @@ class CostModelEvaluation(CostModelEvaluationABC):
         self.carbon_per_task = energy_total * self.carbonparam.CI_op
         self.carbon_total = self.carbon_per_task * self.task_num
 
+    def calc_tCDP(self) ->None:
+        Cemb = self.carbonparam.
+
     def calc_double_buffer_flag(self) -> None:
         """! This function checks the double-buffer possibility for each operand at each memory level
         (minimal memory BW requirement case) by comparing the physical memory size with the effective

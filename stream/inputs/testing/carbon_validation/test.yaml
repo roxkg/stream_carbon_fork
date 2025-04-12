@@ -1,0 +1,14 @@
+CI_op: 490
+CI_em: 820
+lifetime: 17520
+frequency: 2.5
+technology_node: [7,10,14]
+area_list:
+  - type: "logic"
+    area: 6.0
+  - type: "analog"
+    area: 1
+  - type: "mem"
+    area: 1
+energy_op: 225
+package_type: "RDL"

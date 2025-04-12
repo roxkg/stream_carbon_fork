@@ -91,14 +91,14 @@ def optimize_allocation_ga(
             [  # Initializes the MainStage as entry point
                 AcceleratorParserStage,  # Parses the accelerator
                 CarbonParamParserStage,
-                StreamONNXModelParserStage,  # Parses the ONNX Model into the workload
-                LayerStacksGenerationStage,
-                TilingGenerationStage,
-                TiledWorkloadGenerationStage,
-                ZigZagCoreMappingEstimationStage,
-                SetFixedAllocationPerformanceStage,
-                SchedulingOrderGenerationStage,
-                GeneticAlgorithmAllocationStage,
+                # StreamONNXModelParserStage,  # Parses the ONNX Model into the workload
+                # LayerStacksGenerationStage,
+                # TilingGenerationStage,
+                # TiledWorkloadGenerationStage,
+                # ZigZagCoreMappingEstimationStage,
+                # SetFixedAllocationPerformanceStage,
+                # SchedulingOrderGenerationStage,
+                # GeneticAlgorithmAllocationStage,
             ],
             accelerator=hardware,  # required by AcceleratorParserStage
             carbon_path=carbon, #required by CarbonParamParserStage

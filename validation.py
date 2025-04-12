@@ -39,7 +39,8 @@ class CarbonEvaluation:
         for n, comb in enumerate(combinations):
             cpa = self.get_carbon_per_area(comb) 
             defect_density = self.get_defect_rate(comb)
-            new_area = self.area_scaling(area, comb)
+            # new_area = self.area_scaling(area, comb)
+            new_area = area
             total_area = sum(new_area)
             yields = []
             wastage_extra_cfp = []
@@ -48,9 +49,11 @@ class CarbonEvaluation:
                     yields.append(self.yield_calc(new_area[i], defect_density[i]))
                     wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450,chip_area=new_area[i],cpa_factors=cpa[i]))
             else: 
+                print("defect_density:", defect_density[0])
                 yields = self.yield_calc(sum(new_area), defect_density[0])
                 wastage_extra_cfp = self.waste_carbon_per_die(diameter=450,chip_area=sum(new_area),cpa_factors=cpa[0])
                 wastage_extra_cfp = (wastage_extra_cfp * area) / area.sum()
+                print(yields, wastage_extra_cfp)
 
             carbon[n,:-1] = cpa*np.array(new_area) / yields + wastage_extra_cfp
             # mfg_carbon = cpa*np.array(new_area) / yields
@@ -59,12 +62,12 @@ class CarbonEvaluation:
             package_c, router_c, design_carbon[n,-1], router_a = self.package_costs(comb, new_area, True, 700)
             # print(package_c, router_c, design_carbon[n,-1], router_a)
             carbon[n, -1] = package_c*1 + router_c   # 1 is package factor
-            print(carbon[n])
             activity=[0.2, 0.667, 0.1]
             op_carbon[n,:-1] = self.operational_costs(activity, comb, area*self.scme.energy_use/sum(area), self.scme.lifetime, 700)
             emb_carbon[n] = sum(carbon[n]) + (sum(design_carbon[n])*100/1e5)
+            print(sum(design_carbon[n])*100/1e5)
+            # print(carbon[n])
             op_carbon_1[n:-1] = sum(op_carbon[n,:-1])
-        print(carbon)
         """
         #App-dev CFP
         app_dev_c = self.app_cfp(power_per_core=10, num_core=8, Carbon_per_kWh=700,
@@ -441,7 +444,7 @@ class CarbonEvaluation:
         return design_cfp_total,mfg_cfp_total,eol_cfp_total,ope_cfp_total,app_cfp_total
     
 
-input_data = open_yaml("stream/inputs/testing/carbon_validation/GA102.yaml")
+input_data = open_yaml("stream/inputs/testing/carbon_validation/test.yaml")
 area_dict = {item["type"]: item["area"] for item in input_data["area_list"]}
 
 hardware = CarbonModel(CI_op=input_data["CI_op"], 

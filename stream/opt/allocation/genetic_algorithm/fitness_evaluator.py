@@ -46,7 +46,8 @@ class StandardFitnessEvaluator(FitnessEvaluator):
         super().__init__(workload, accelerator, carbon_param, embodied_carbon, cost_lut)
 
         # self.weights = (-1.0, -1.0, 0)
-        #self.weights = (-1.0, )
+        # self.weights = (-1.0, )
+        # self.metrics = ["tCDP"]
         #self.metrics = ["carbon", "energy", "latency", ]
         #self.weights = (-1.0,)
         #self.metrics = ["carbon"]
@@ -72,19 +73,21 @@ class StandardFitnessEvaluator(FitnessEvaluator):
             self.scheduling_order,
         )
         scme.run()
-        #energy = scme.energy
-        #latency = scme.latency
+        energy = scme.energy
+        latency = scme.latency
         carbon = scme.carbon
         CD = scme.CD
         ED = scme.ED
+        tCDP = scme.tCDP
         # if not return_scme:
         #     return energy, latency, carbon
         # return energy, latency, carbon, scme
-        """
-        if not return_scme:
-            return (carbon,)
-        return (carbon,) , scme
-        """
+        
+        # if not return_scme:
+        #     return (tCDP,)
+        # return (tCDP,) , scme
+        
+        
         if not return_scme:
             return CD,ED
         return CD,ED , scme

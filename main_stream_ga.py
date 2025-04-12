@@ -20,6 +20,8 @@ carbon_path = "stream/inputs/examples/carbon/relative_carbon_intensity.yaml"
 workload_path = "stream/inputs/examples/workload/resnet18.onnx"
 mapping_path = "stream/inputs/examples/mapping/simba.yaml"
 mode = "fused"
+direction = "test"
+is_chiplet = False
 layer_stacks = [tuple(range(0, 11)), tuple(range(11, 22))] + list((i,) for i in range(22, 49))
 nb_ga_generations = 4
 nb_ga_individuals = 4
@@ -30,7 +32,7 @@ hw_name = accelerator.split("/")[-1].split(".")[0]
 wl_name = re.split(r"/|\.", workload_path)[-1]
 if wl_name == "onnx":
     wl_name = re.split(r"/|\.", workload_path)[-2]
-experiment_id = f"{hw_name}-{wl_name}-{mode}-genetic_algorithm"
+experiment_id = f"{hw_name}-{wl_name}-{mode}-{direction}-{is_chiplet}-genetic_algorithm"
 ######################################################################
 
 ##############PLOTTING###############
@@ -53,7 +55,7 @@ scme = optimize_allocation_ga(
     hardware=accelerator,
     workload=workload_path,
     carbon=carbon_path,
-    is_chiplet= False,
+    is_chiplet= is_chiplet,
     mapping=mapping_path,
     mode=mode,
     layer_stacks=layer_stacks,
@@ -79,13 +81,18 @@ visualize_timeline_plotly(
 # calculate_carbon(scme, False)
 # calculate_carbon(scme, True)
 
+f = open(f"outputs/{experiment_id}/metrics.txt", "w")
+f.write(f"total delay = {scme.latency} cycles\ntotal energy = {scme.energy} pJ\nembodied carbon = {scme.embodied_carbon}\noperational carbon = {scme.carbon}\ntCDP = {scme.tCDP}\nCD={scme.CD}\nED={scme.ED}\n")
+f.close()
 
-"""
-print(f"total delay = {scme.latency} cycles\ntotal energy = {scme.energy} pJ\n")
+
+print(f"total delay = {scme.latency} cycles\ntotal energy = {scme.energy} pJ\nembodied carbon = {scme.embodied_carbon}\noperational carbon = {scme.carbon}\ntCDP = {scme.tCDP}\nCD={scme.CD}\nED={scme.ED}\n")
+
 # Plotting memory usage of best SCME
 plot_memory_usage(scme, section_start_percent, percent_shown, fig_path=memory_fig_path)
 
 # Save json for perfetto visualization (Visualize at http://ui.perfetto.dev/)
 convert_scme_to_perfetto_json(scme, cost_lut, json_path=json_path)
-"""
+
+
 

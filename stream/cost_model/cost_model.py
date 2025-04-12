@@ -43,6 +43,7 @@ class StreamCostModelEvaluation:
         self.carbon: float | None = None
         self.CD: float | None = None
         self.ED: float | None = None
+        self.tCDP: float | None = None
         self.area_total: int | None = None
         self.max_memory_usage = None
         self.core_timesteps_delta_cumsums = None
@@ -91,9 +92,11 @@ class StreamCostModelEvaluation:
         frequency = self.carbon_param.frequency
         taskspan = self.latency/(frequency*10**9)/3600
         energy = self.energy/(10**12)/3600000
+        power = energy/taskspan
         self.carbon = lifespan / taskspan * energy * self.carbon_param.CI_op
-        self.CD = self.embodied_carbon /lifespan * taskspan * taskspan
-        self.ED = energy * taskspan
+        self.CD = self.embodied_carbon /lifespan * taskspan * taskspan * 3600 * 1000
+        self.ED = self.energy/(10**12) * taskspan * 3600
+        self.tCDP = self.CD + (self.carbon_param.lifetime * self.carbon_param.CI_op * power) * taskspan * 3600
         # self.area_total, self.mem_area = self.collect_area_data()
 
     """

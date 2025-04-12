@@ -40,8 +40,10 @@ class CarbonParamParserStage(Stage):
         self.data = self.get_scaling_parameter()
 
     def run(self): 
+        embodied_carbon = self.embodied_carbon_costs(self.is_chiplet)
+        self.carbonparam.set_cemb(embodied_carbon)
         self.kwargs["carbon_param"] = self.carbonparam
-        self.kwargs["embodied_carbon"] = self.embodied_carbon_costs(self.is_chiplet)
+        self.kwargs["embodied_carbon"] = embodied_carbon[0]
         sub_stage = self.list_of_callables[0](self.list_of_callables[1:], accelerator=self.accelerator, **self.kwargs)
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
@@ -97,15 +99,21 @@ class CarbonParamParserStage(Stage):
     def embodied_carbon_costs(self, is_chiplet):
         noc_area_list = []
         core_area_list = []
+        core_id_list = []
         for core in self.accelerator.core_list: 
             if core.core_area != 0:
                 core_area_list.append(core.core_area)
                 noc_area_list.append(core.noc_area)
-        area_list = [ x + y for x, y in zip(noc_area_list, core_area_list)]
+                core_id_list.append(core.id)
+        if is_chiplet: 
+            area_list = [ x + y for x, y in zip(noc_area_list, core_area_list)]
+        else: 
+            area_list = core_area_list
         combinations = list(it.product([self.carbonparam.technology_node], repeat = len(area_list)))
+        print("area list: ", area_list, "combinations: ", combinations)
         
         if is_chiplet:
-            carbon = np.zeros((len(combinations), len(area_list)+1))
+            carbon = np.zeros((len(combinations), len(area_list)))
             for n, comb in enumerate(combinations): 
                 cpa = self.get_carbon_per_area(comb)
                 defect_density = self.get_defect_rate(comb) 
@@ -114,33 +122,51 @@ class CarbonParamParserStage(Stage):
                 for i, c in enumerate(comb): 
                     yields.append(self.yield_calc(area_list[i],defect_density[i]))
                     wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450, chip_area=area_list[i], cpa_factors=cpa[i]))
-                carbon[n,:-1] = cpa*np.array(area_list) / yields + wastage_extra_cfp   # in g
+                carbon = cpa*np.array(area_list) / yields + wastage_extra_cfp   # in g
                 design_carbon_per_chiplet, design_carbon = self.design_costs(area_list, 8,10,700,comb, is_chiplet)
-                package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, comb, area_list, True, is_chiplet, 700)
-                carbon[n, -1] = package_c * 1 + router_c   # in g
-                total_carbon = sum(carbon)
+                package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, comb, area_list, True, is_chiplet, 700, noc_area_list)
+                print(package_c, router_c, design_carbon_package, router_a)
+                package_carbon = package_c * 1 + router_c   # in g
+            print("design_carbon: ", design_carbon)
+            #total_carbon = carbon.sum(axis=1)
+            carbon = carbon + package_carbon/len(core_id_list)
+            print("carbon afteer:", carbon)
+            total_carbon = carbon.sum()
+            print("carbon: ", carbon)
         else: 
             cpa = self.get_carbon_per_area([self.carbonparam.technology_node])
+            print("cpa: ", cpa)
             defect_density = self.get_defect_rate([self.carbonparam.technology_node])
+            print("defect_desnity: ", defect_density)
             total_area = sum(area_list)
             yields = self.yield_calc(total_area, defect_density[0])
-            # print("yields",yields)
+            print("yields",yields)
             wastage_extra_cfp = self.waste_carbon_per_die(diameter=450, chip_area=total_area, cpa_factors=cpa[0])
+            print("wastage_extra_cfp:", wastage_extra_cfp)
             area = np.array(total_area)
             carbon = cpa*area/yields + wastage_extra_cfp
+            print(carbon)
             design_carbon_per_chiplet, design_carbon = self.design_costs(area_list, 8,10,700,combinations[0], is_chiplet)
+            print("---------design calculate over-----------")
+            print("design_carbon_per_chiplet:", design_carbon_per_chiplet)
             package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, combinations[0], area_list, True, is_chiplet, 700)
+            print(package_c, router_c, design_carbon_package, router_a)
             total_carbon = carbon +  package_c * 1 + router_c
+        
         app_dev_c = self.app_cfp(power_per_core=10, num_core=8, Carbon_per_kWh=700,
-                            Na=5,Ns=1e5,fe_time=0.2,be_time=0.05,config_time=0)
+                            Na=0,Ns=0,fe_time=0.2,be_time=0.05,config_time=0)
     
         #Recycle CFP
         eol_c = self.end_cfp(cpa_dis_p_Ton=10, cpa_rcy_p_Ton=2, dis_frac=1, weight_p_die=2)
-        cdes = design_carbon.sum()
-        if is_chiplet:
-            cmfg = carbon.sum(axis=1)
+        cdes = design_carbon_per_chiplet.sum()
+        #cmfg = total_carbon
+
+        if is_chiplet: 
+            cmfg = carbon
+            print("cmfg:", cmfg)
         else: 
-            cmfg = carbon[0]
+            cmfg = np.array(total_carbon)
+            print("cmfg:", cmfg)
         ceol = eol_c
         capp = app_dev_c
 
@@ -149,15 +175,27 @@ class CarbonParamParserStage(Stage):
         ceol = ceol/1000
         capp = capp/1000
 
-        des_c, mfg_c, eol_c, app_c = self.total_cfp_gen(1,cdes,cmfg,1,1e6, ceol, capp,1)
-        
-        emb_c = des_c + mfg_c + eol_c + app_c     
+        des_c, mfg_c, eol_c, app_c = self.total_cfp_gen(1,cdes,cmfg,1,1, ceol, capp,1)
+        # print("des_c, mfg_c, eol_c, app_c:", des_c, mfg_c, eol_c, app_c)
+        # emb_c = des_c + mfg_c + eol_c + app_c     
+        if is_chiplet:
+            emb_c = dict(zip(core_id_list,carbon+(des_c+eol_c+app_c)/len(core_id_list)))
+        else:
+            value_list = [des_c + mfg_c + eol_c + app_c] * len(core_id_list)
+            emb_c = dict(zip(core_id_list,value_list))
+        print("emb_c: ", emb_c)
         return emb_c
 
     def design_costs(self, areas, Transistors_per_gate,Power_per_core,Carbon_per_kWh, technology_node, is_chiplet):
+        """
+        return result is in kg
+        """
+        print("--------------inside design costs:-------------------")
         transistor_density = self.data["transistor_scaling"]["Transistors_per_mm2"]
+        print("transistor_density: ", transistor_density)
         gates_design_time = self.data["gates_per_hr_per_core"]["Gates_per_hr_per_core"]
         nodes = self.data["technology_node"]["technology_node"][:-1]
+        print("nodes: ", nodes)
         if is_chiplet:
             if technology_node[0] in nodes: 
                 transistors = areas[0]*transistor_density[nodes.index(technology_node[0])]
@@ -166,10 +204,15 @@ class CarbonParamParserStage(Stage):
                                     transistor_density)
         else:
             if technology_node[0] in nodes: 
+                print(transistor_density[nodes.index(technology_node[0])])
                 transistors = sum(areas)*transistor_density[nodes.index(technology_node[0])]
+                print("transistor number:", transistors)
             else:
+                print(np.interp(technology_node[0], nodes, transistor_density))
+                print(sum(areas))
                 transistors = sum(areas)*np.interp(technology_node[0], nodes, 
                                     transistor_density)
+                print("transistor number:", transistors)
         gates = transistors/Transistors_per_gate
 
         if technology_node[0] in nodes: 
@@ -177,12 +220,13 @@ class CarbonParamParserStage(Stage):
         else: 
             CPU_core_hours = gates/np.interp(technology_node[0], nodes, 
                                     gates_design_time)
+            print("CPU_core_hours:", CPU_core_hours)
         total_energy = Power_per_core*CPU_core_hours/1000  #in kWh
         design_carbon = Carbon_per_kWh * total_energy
-        design_carbon_per_chiplet = design_carbon*90/1e5
+        design_carbon_per_chiplet = design_carbon*100/1e5
         return design_carbon_per_chiplet, design_carbon
     
-    def package_costs(self, area_list, technology_node, new_area, return_router_area, is_chiplet, carbon_per_kwh):
+    def package_costs(self, area_list, technology_node, new_area, return_router_area, is_chiplet, carbon_per_kwh, router_area_fix = 0):
         package_carbon = 0 
         router_carbon = 0
         router_design = 0
@@ -193,6 +237,7 @@ class CarbonParamParserStage(Stage):
         if is_chiplet:
             num_chiplets = len(new_area)
             interposer_area = sum(area_list)
+            interposer_area = 47.5 * 47.5
             num_if = len(self.accelerator.communication_manager.pair_links)
             interposer_carbon = self.package_mfg_carbon(package_param["interposer_node"], [interposer_area])
             logic_scaling = self.data["logic_scaling"]
@@ -203,8 +248,11 @@ class CarbonParamParserStage(Stage):
             nodes = self.data["technology_node"]["technology_node"]
             package = self.carbonparam.package_type
             if package == "active": 
-                router_area = 4.47 * num_chiplets
-                router_area = interposer_carbon * router_area/interposer_area
+                if router_area_fix != 0:
+                    router_area = router_area_fix
+                else:
+                    router_area = 4.47 * num_chiplets
+                    router_area = interposer_carbon * router_area/interposer_area
                 router_design = 0 
                 package_carbon = interposer_carbon * beolVfeol[-1]
             elif package == "3D":
@@ -216,16 +264,22 @@ class CarbonParamParserStage(Stage):
                 carbon2d= self.package_mfg_carbon(technology_node,area_list)
                 package_carbon = np.sum(carbon3d-carbon2d)
                 router_area = []
-                for index in range(len(area_list)):
-                    router_area.append(0.33/scalings[2][index])
+                if router_area_fix != 0: 
+                    router_area = router_area_fix
+                else:
+                    for index in range(len(area_list)):
+                        router_area.append(0.33/scalings[2][index])
                 router_carbon= self.package_mfg_carbon(technology_node, router_area)
                 router_carbon= np.sum(router_carbon)
                 router_design = 0
                 bonding_yield = bonding_yield**num_chiplets
             elif package in ['passive', 'RDL', 'EMIB']: 
                 router_area = []
-                for index in range(len(area_list)):
-                    router_area.append(0.33/scalings[2][0])
+                if router_area_fix != 0: 
+                    router_area = router_area_fix
+                else:
+                    for index in range(len(area_list)):
+                        router_area.append(0.33/scalings[2][0])
                 # router_carbon= self.package_mfg_carbon(technology_node, router_area)
                 cpa = self.get_carbon_per_area(technology_node) 
                 defect_density = self.get_defect_rate(technology_node)
@@ -306,3 +360,7 @@ class CarbonParamParserStage(Stage):
         eol_cfp_total = n_fpga*(eol_c_pu*num_des*vol)
         app_cfp_total = app_c_tot
         return design_cfp_total,mfg_cfp_total,eol_cfp_total,app_cfp_total
+
+
+    def is_leaf(self) -> bool:
+        return True

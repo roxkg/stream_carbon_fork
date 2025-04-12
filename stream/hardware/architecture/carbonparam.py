@@ -22,6 +22,10 @@ class CarbonParam:
         self.mfg_carbon = 0
         self.design_carbon = 0
         self.package_carbon = 0
+        self.cemb = None
+        
+    def set_cemb(self, cemb):
+        self.cemb = cemb
 
     
         
