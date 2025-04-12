@@ -55,6 +55,7 @@ class CostModelEvaluationABC(metaclass=ABCMeta):
         self.mac_utilization1: float
         self.mac_utilization2: float
         self.carbon_total: float
+        self.tCDP: float
 
 
         self.accelerator: Accelerator | None
@@ -132,7 +133,7 @@ class CostModelEvaluationABC(metaclass=ABCMeta):
 
         # Carbon
         result.carbon_total = self.carbon_total + other.carbon_total
-
+        result.tCDP = self.tCDP + other.tCDP
         # MAC utilization
         result.mac_spatial_utilization = result.ideal_cycle / result.ideal_temporal_cycle
         result.mac_utilization0 = result.ideal_cycle / result.latency_total0
@@ -199,6 +200,7 @@ class CostModelEvaluationABC(metaclass=ABCMeta):
 
         # Carbon 
         result.carbon_total *= number
+        result.tCDP *= number
 
         # MAC utilization
         result.mac_spatial_utilization = result.ideal_cycle / result.ideal_temporal_cycle
@@ -659,7 +661,15 @@ class CostModelEvaluation(CostModelEvaluationABC):
         self.carbon_total = self.carbon_per_task * self.task_num
 
     def calc_tCDP(self) ->None:
-        Cemb = self.carbonparam.
+        Cemb = self.carbonparam.cemb[self.accelerator.id]
+        lifespan = self.carbonparam.lifetime
+        frequency = self.carbonparam.frequency
+        energy = self.energy_total/(10**12)/3600000
+        taskspan = self.latency_total2/(frequency*10**9)/3600
+        power = energy/taskspan   # kW
+        CD = Cemb/lifespan * taskspan *taskspan * 3600   #g * s
+        ED = self.carbonparam.lifetime * self.carbonparam.CI_op * power * taskspan * 3600   # g*s
+        self.tCDP = CD +ED
 
     def calc_double_buffer_flag(self) -> None:
         """! This function checks the double-buffer possibility for each operand at each memory level

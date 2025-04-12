@@ -185,7 +185,7 @@ class MinimaltCDPStage(Stage):
             assert isinstance(cme, CostModelEvaluation)
             if(
                 best_cme is None
-                or cme.carbon_total < best_cme.carbon_total
+                or cme.tCDP < best_cme.tCDP
             ): 
                 best_cme = cme 
             if self.keep_others: 
