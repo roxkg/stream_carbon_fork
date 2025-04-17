@@ -27,7 +27,7 @@ class StreamCostModelEvaluation:
         self.workload = workload
         self.accelerator = accelerator
         self.carbon_param = carbon_param
-        self.embodied_carbon = embodied_carbon
+        self.embodied_carbon = carbon_param.cemb
         self.energy: float | None = None
         self.total_cn_onchip_energy: float | None = None
         self.total_cn_offchip_link_energy: float | None = None
@@ -93,8 +93,11 @@ class StreamCostModelEvaluation:
         taskspan = self.latency/(frequency*10**9)/3600
         energy = self.energy/(10**12)/3600000
         power = energy/taskspan
-        self.carbon = lifespan / taskspan * energy * self.carbon_param.CI_op
-        self.CD = self.embodied_carbon /lifespan * taskspan * taskspan * 3600 * 1000
+        # self.carbon = lifespan / taskspan * energy * self.carbon_param.CI_op
+        self.carbon = energy * self.carbon_param.CI_op
+        self.CD = sum(self.embodied_carbon.values()) /lifespan * taskspan * taskspan * 3600 * 1000
+        self.CD = float(self.CD)
+        # self.CD = self.embodied_carbon.sum() * taskspan * 3600 * 1000
         self.ED = self.energy/(10**12) * taskspan * 3600
         self.tCDP = self.CD + (self.carbon_param.lifetime * self.carbon_param.CI_op * power) * taskspan * 3600
         # self.area_total, self.mem_area = self.collect_area_data()

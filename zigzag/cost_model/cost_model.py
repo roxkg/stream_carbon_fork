@@ -280,6 +280,7 @@ class CumulativeCME(CostModelEvaluationABC):
         self.latency_total2: float = 0.0
 
         self.carbon_total: float = 0.0
+        self.tCDP: float = 0.0
 
         self.accelerator = None
 
@@ -366,6 +367,7 @@ class CostModelEvaluation(CostModelEvaluationABC):
         self.task_num: int = 1
         self.carbon_per_task: float = 0.0
         self.carbon_total: float = 0.0
+        self.tCDP: float = 0.0
 
         # Run the cost model evaluation
         self.run()
@@ -377,6 +379,7 @@ class CostModelEvaluation(CostModelEvaluationABC):
         self.calc_energy()
         self.calc_latency()
         self.calc_carbon()
+        self.calc_tCDP()
 
     @lru_cache(maxsize=512)
     def __get_shared_mem_list(
@@ -658,7 +661,8 @@ class CostModelEvaluation(CostModelEvaluationABC):
         self.task_num = self.carbonparam.lifetime/taskspan
         energy_total = self.energy_total/(10**12)/3600000
         self.carbon_per_task = energy_total * self.carbonparam.CI_op
-        self.carbon_total = self.carbon_per_task * self.task_num
+        # self.carbon_total = self.carbon_per_task * self.task_num
+        self.carbon_total = self.carbon_per_task
 
     def calc_tCDP(self) ->None:
         Cemb = self.carbonparam.cemb[self.accelerator.id]
@@ -667,7 +671,8 @@ class CostModelEvaluation(CostModelEvaluationABC):
         energy = self.energy_total/(10**12)/3600000
         taskspan = self.latency_total2/(frequency*10**9)/3600
         power = energy/taskspan   # kW
-        CD = Cemb/lifespan * taskspan *taskspan * 3600   #g * s
+        # CD = Cemb/lifespan * taskspan *taskspan * 3600   #g * s
+        CD = Cemb *taskspan * 3600   #g * s
         ED = self.carbonparam.lifetime * self.carbonparam.CI_op * power * taskspan * 3600   # g*s
         self.tCDP = CD +ED
 

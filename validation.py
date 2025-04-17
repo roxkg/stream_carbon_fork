@@ -337,6 +337,7 @@ class CarbonEvaluation:
                 router_area = []
                 for index in range(len(self.scme.area_list)):
                     router_area.append(0.33/scalings[2][index])
+                print("router_area:", router_area)
                 # router_carbon= self.package_mfg_carbon(technology_node, router_area)
                 cpa = self.get_carbon_per_area(technology_node) 
                 defect_density = self.get_defect_rate(technology_node)
@@ -444,7 +445,7 @@ class CarbonEvaluation:
         return design_cfp_total,mfg_cfp_total,eol_cfp_total,ope_cfp_total,app_cfp_total
     
 
-input_data = open_yaml("stream/inputs/testing/carbon_validation/test.yaml")
+input_data = open_yaml("stream/inputs/testing/carbon_validation/GA102.yaml")
 area_dict = {item["type"]: item["area"] for item in input_data["area_list"]}
 
 hardware = CarbonModel(CI_op=input_data["CI_op"], 

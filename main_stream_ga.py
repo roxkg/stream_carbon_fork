@@ -10,18 +10,24 @@ from stream.visualization.schedule import (
     visualize_timeline_plotly,
 )
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--is_chiplet", action="store_true", default=False)
+args = parser.parse_args()
 _logging_level = _logging.INFO
-_logging_format = "%(asctime)s - %(name)s.%(funcName)s +%(lineno)s - %(levelname)s - %(message)s"
+_logging_format = "%(asctime)s - %(name)s - [%(filename)s:%(funcName)s:%(lineno)d] - %(levelname)s - %(message)s"
 _logging.basicConfig(level=_logging_level, format=_logging_format)
 
 ############################################INPUTS############################################
 accelerator = "stream/inputs/examples/hardware/carbon/simba.yaml"
 carbon_path = "stream/inputs/examples/carbon/relative_carbon_intensity.yaml"
-workload_path = "stream/inputs/examples/workload/resnet18.onnx"
+workload_path = "stream/inputs/examples/workload/resnet50.onnx"
 mapping_path = "stream/inputs/examples/mapping/simba.yaml"
 mode = "fused"
-direction = "test"
-is_chiplet = False
+direction = "tCDP2"
+is_chiplet = args.is_chiplet
+# is_chiplet = False
 layer_stacks = [tuple(range(0, 11)), tuple(range(11, 22))] + list((i,) for i in range(22, 49))
 nb_ga_generations = 4
 nb_ga_individuals = 4
@@ -55,6 +61,7 @@ scme = optimize_allocation_ga(
     hardware=accelerator,
     workload=workload_path,
     carbon=carbon_path,
+    opt="tCDP",
     is_chiplet= is_chiplet,
     mapping=mapping_path,
     mode=mode,

@@ -58,6 +58,7 @@ def _sanity_check_gurobi_license():
 def optimize_allocation_ga(
     hardware: str,
     carbon: str,
+    opt: str,
     is_chiplet: bool,
     workload: str,
     mapping: str,
@@ -91,18 +92,19 @@ def optimize_allocation_ga(
             [  # Initializes the MainStage as entry point
                 AcceleratorParserStage,  # Parses the accelerator
                 CarbonParamParserStage,
-                # StreamONNXModelParserStage,  # Parses the ONNX Model into the workload
-                # LayerStacksGenerationStage,
-                # TilingGenerationStage,
-                # TiledWorkloadGenerationStage,
-                # ZigZagCoreMappingEstimationStage,
-                # SetFixedAllocationPerformanceStage,
-                # SchedulingOrderGenerationStage,
-                # GeneticAlgorithmAllocationStage,
+                StreamONNXModelParserStage,  # Parses the ONNX Model into the workload
+                LayerStacksGenerationStage,
+                TilingGenerationStage,
+                TiledWorkloadGenerationStage,
+                ZigZagCoreMappingEstimationStage,
+                SetFixedAllocationPerformanceStage,
+                SchedulingOrderGenerationStage,
+                GeneticAlgorithmAllocationStage,
             ],
             accelerator=hardware,  # required by AcceleratorParserStage
             carbon_path=carbon, #required by CarbonParamParserStage
             is_chiplet=is_chiplet,
+            opt=opt,
             workload_path=workload,  # required by ModelParserStage
             mapping_path=mapping,  # required by ModelParserStage
             loma_lpf_limit=6,  # required by LomaEngine

@@ -10,7 +10,7 @@ from zigzag.stages.evaluation.cost_model_evaluation import CostModelStage
 from zigzag.stages.main import MainStage
 from zigzag.stages.mapping.spatial_mapping_generation import SpatialMappingGeneratorStage
 from zigzag.stages.mapping.temporal_mapping_generator_stage import TemporalMappingGeneratorStage
-from zigzag.stages.results.reduce_stages import MinimalLatencyStage, MinimalCarbonStage, MinimalEnergyStage
+from zigzag.stages.results.reduce_stages import MinimalLatencyStage, MinimalCarbonStage, MinimalEnergyStage, MinimaltCDPStage
 from zigzag.utils import pickle_deepcopy
 
 from stream.hardware.architecture.accelerator import Accelerator
@@ -37,6 +37,7 @@ class ZigZagCoreMappingEstimationStage(Stage):
         list_of_callables: list[StageCallable],
         *,
         workload: ComputationNodeWorkload,
+        opt: str,
         accelerator: Accelerator,
         carbon_param: CarbonParam,
         loma_lpf_limit: int,
@@ -56,6 +57,7 @@ class ZigZagCoreMappingEstimationStage(Stage):
         self.cost_lut_path = cost_lut_path
         self.visualize_cost_lut_path = os.path.splitext(self.cost_lut_path)[0] + ".png"
         self.loma_show_progress_bar: bool = kwargs.get("loma_show_progress_bar", False)
+        self.opt = opt
 
         # Extract all unique nodes that will have to be evaluated
         self.unique_nodes = get_unique_nodes(self.workload)
@@ -155,11 +157,23 @@ class ZigZagCoreMappingEstimationStage(Stage):
         if too_large_operands:
             core = self.add_offchip_to_core(core, too_large_operands, node.id)
 
+        match self.opt:
+            case "energy":
+                opt_stage = MinimalEnergyStage
+            case "latency":
+                opt_stage = MinimalLatencyStage
+            case "tCDP":
+                opt_stage = MinimaltCDPStage
+            case "carbon": 
+                opt_stage = MinimalCarbonStage
+            case _:
+             raise NotImplementedError("Optimization criterion 'opt' should be either 'energy' or 'latency' or 'tCDP' or 'carbon'.")
+
         main_stage = MainStage(
             [  # Initializes the MainStage as entry point
-                MinimalLatencyStage,
+                opt_stage,
                 SpatialMappingGeneratorStage,  # Generates multiple spatial mappings (SM)
-                MinimalLatencyStage,  # Reduces all CMEs, returning minimal latency one
+                opt_stage,  # Reduces all CMEs, returning minimal latency one
                 TemporalMappingGeneratorStage,  # Generates multiple temporal mappings (TM)
                 CostModelStage,  # Evaluates generated SM and TM through cost model
             ],

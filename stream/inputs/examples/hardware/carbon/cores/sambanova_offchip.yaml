@@ -40,7 +40,7 @@ memories:
     ports:
       - fh: w_port_1
         tl: r_port_1
-    served_dimensions: []
+    served_dimensions: [D1,D2]
 
 operational_array:
   multiplier_energy: 0

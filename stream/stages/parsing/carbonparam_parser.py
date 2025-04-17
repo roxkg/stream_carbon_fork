@@ -123,7 +123,7 @@ class CarbonParamParserStage(Stage):
                     yields.append(self.yield_calc(area_list[i],defect_density[i]))
                     wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450, chip_area=area_list[i], cpa_factors=cpa[i]))
                 carbon = cpa*np.array(area_list) / yields + wastage_extra_cfp   # in g
-                design_carbon_per_chiplet, design_carbon = self.design_costs(area_list, 8,10,700,comb, is_chiplet)
+                design_carbon_per_chiplet, design_carbon = self.design_costs(core_area_list, 8,10,700,comb, is_chiplet)
                 package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, comb, area_list, True, is_chiplet, 700, noc_area_list)
                 print(package_c, router_c, design_carbon_package, router_a)
                 package_carbon = package_c * 1 + router_c   # in g
@@ -132,6 +132,7 @@ class CarbonParamParserStage(Stage):
             carbon = carbon + package_carbon/len(core_id_list)
             print("carbon afteer:", carbon)
             total_carbon = carbon.sum()
+            cdes = design_carbon_per_chiplet.sum() + design_carbon_package.sum()
             print("carbon: ", carbon)
         else: 
             cpa = self.get_carbon_per_area([self.carbonparam.technology_node])
@@ -152,13 +153,14 @@ class CarbonParamParserStage(Stage):
             package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, combinations[0], area_list, True, is_chiplet, 700)
             print(package_c, router_c, design_carbon_package, router_a)
             total_carbon = carbon +  package_c * 1 + router_c
-        
+            cdes = design_carbon_per_chiplet.sum()
         app_dev_c = self.app_cfp(power_per_core=10, num_core=8, Carbon_per_kWh=700,
                             Na=0,Ns=0,fe_time=0.2,be_time=0.05,config_time=0)
     
         #Recycle CFP
         eol_c = self.end_cfp(cpa_dis_p_Ton=10, cpa_rcy_p_Ton=2, dis_frac=1, weight_p_die=2)
-        cdes = design_carbon_per_chiplet.sum()
+        print("design_carbon_per_chiplet:", design_carbon_per_chiplet)
+        # cdes = design_carbon_per_chiplet.sum() + design_carbon_package.sum()
         #cmfg = total_carbon
 
         if is_chiplet: 
@@ -179,11 +181,15 @@ class CarbonParamParserStage(Stage):
         # print("des_c, mfg_c, eol_c, app_c:", des_c, mfg_c, eol_c, app_c)
         # emb_c = des_c + mfg_c + eol_c + app_c     
         if is_chiplet:
-            emb_c = dict(zip(core_id_list,carbon+(des_c+eol_c+app_c)/len(core_id_list)))
+            # emb_c = dict(zip(core_id_list,[mfg_c+(des_c+eol_c+app_c)/len(core_id_list)]))
+            emb_c = dict(zip(core_id_list, mfg_c+(des_c+eol_c+app_c)/len(core_id_list)))
+            print("core id list: ", core_id_list)
         else:
-            value_list = [des_c + mfg_c + eol_c + app_c] * len(core_id_list)
-            emb_c = dict(zip(core_id_list,value_list))
+            value = float((des_c + mfg_c + eol_c + app_c)/len(core_id_list))
+            emb_c = dict.fromkeys(core_id_list, value)
+            # emb_c = dict(zip(core_id_list,value_list))
         print("emb_c: ", emb_c)
+        print("embc_core: ", emb_c[0])
         return emb_c
 
     def design_costs(self, areas, Transistors_per_gate,Power_per_core,Carbon_per_kWh, technology_node, is_chiplet):
@@ -298,7 +304,7 @@ class CarbonParamParserStage(Stage):
                     wastage_extra_cfp = (wastage_extra_cfp * router_area) / sum(router_area)
                 router_carbon = cpa*np.array(new_area) / yields# + wastage_extra_cfp
                 design_carbon_per_chiplet, router_design = self.design_costs(new_area, 8, 10, 700, technology_node, False)
-                router_carbon, router_design = np.sum(router_carbon), np.sum(router_design)
+                router_carbon, router_design = np.sum(router_carbon), np.sum(design_carbon_per_chiplet)
                 if package == 'passive':
                     package_carbon = interposer_carbon* beolVfeol[nodes.index(package_param["interposer_node"])]
                 elif package == 'RDL':
@@ -362,5 +368,5 @@ class CarbonParamParserStage(Stage):
         return design_cfp_total,mfg_cfp_total,eol_cfp_total,app_cfp_total
 
 
-    def is_leaf(self) -> bool:
-        return True
+    # def is_leaf(self) -> bool:
+    #     return True

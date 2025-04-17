@@ -1,31 +1,12 @@
 name: sambanova_chiplet
 
 memories:
-
   register_file:
-    size: 65536  # 64 KiB per PCU for local accumulation
-    r_bw: 1024
-    w_bw: 1024
-    r_cost: 0.01
-    w_cost: 0.01
-    area: 50
-    r_port: 1
-    w_port: 1
-    rw_port: 0
-    latency: 1
-    operands: [I2]
-    ports:
-      - fh: w_port_1
-        tl: r_port_1
-    served_dimensions: []
-
-  accumulation_buffer:
-    size: 65536  # 32 KiB for output partial sums (halved)
-    r_bw: 1024
-    w_bw: 1024
-    r_cost: 0.02
-    w_cost: 0.02
-    area: 50
+    size: 1024  # ?why 1024 in TPU-like
+    r_bw: 64
+    w_bw: 64
+    r_cost: 0.08
+    w_cost: 0.08
     r_port: 1
     w_port: 1
     rw_port: 0
@@ -34,15 +15,14 @@ memories:
     ports:
       - fh: w_port_1
         tl: r_port_1
-    served_dimensions: [D1, D2]
+    served_dimensions: [D1]
 
   onchip_sram:
-    size: 272629760  # 260 MiB in bits (halved from 520 MiB)
-    r_bw: 4096
-    w_bw: 4096
+    size: 4259840  # 520MiB /rdu = 520KB/PMU = 4259840
+    r_bw: 5120
+    w_bw: 5120
     r_cost: 0.1
     w_cost: 0.1
-    area: 500
     r_port: 1
     w_port: 1
     rw_port: 0
@@ -56,15 +36,16 @@ memories:
 operational_array:
   multiplier_energy: 0.02
   multiplier_area: 1
-  dimensions: [D1, D2]
-  sizes: [16, 32]  # 512 PCUs
+  dimensions: [D1, D2, D3]   # 520 PCUs each PCU has 160 PE, each PCU has 4PE for one lane
+  sizes: [4,40, 520]  
 
 dataflows:
   D1:
-    - K, 16
+    - K, 4
   D2:
-    - C, 32
+    - C, 40
+  D3:
+    - K, 520
 
-# NOTE:
-# - This models half the original SN40L socket capacity, assuming each socket is composed of two chiplets.
-# - PCUs support both systolic (GEMM) and SIMD execution (element-wise/reduction).
+noc_area: 1
+core_area: 600
