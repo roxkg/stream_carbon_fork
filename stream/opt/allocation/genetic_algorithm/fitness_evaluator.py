@@ -46,13 +46,13 @@ class StandardFitnessEvaluator(FitnessEvaluator):
         super().__init__(workload, accelerator, carbon_param, embodied_carbon, cost_lut)
 
         # self.weights = (-1.0, -1.0, 0)
-        # self.weights = (-1.0, )
-        # self.metrics = ["tCDP"]
+        self.weights = (-1.0, )
+        self.metrics = ["tCDP"]
         #self.metrics = ["carbon", "energy", "latency", ]
         #self.weights = (-1.0,)
         #self.metrics = ["carbon"]
-        self.weights = (-1.0, -1.0)
-        self.metrics = ["CD", "ED"]
+        # self.weights = (-1.0, -1.0)
+        # self.metrics = ["CD", "ED"]
         self.layer_groups_flexible = layer_groups_flexible
         self.operands_to_prefetch = operands_to_prefetch
         self.scheduling_order = scheduling_order
@@ -83,14 +83,14 @@ class StandardFitnessEvaluator(FitnessEvaluator):
         #     return energy, latency, carbon
         # return energy, latency, carbon, scme
         
-        # if not return_scme:
-        #     return (tCDP,)
-        # return (tCDP,) , scme
-        
-        
         if not return_scme:
-            return CD,ED
-        return CD,ED , scme
+            return (tCDP,)
+        return (tCDP,) , scme
+        
+        
+        # if not return_scme:
+        #     return CD,ED
+        # return CD,ED , scme
 
     def set_node_core_allocations(self, core_allocations: list[int]):
         """Sets the core allocation of all nodes in self.workload according to core_allocations.

@@ -304,6 +304,7 @@ class CarbonEvaluation:
             num_if = int(np.ceil(num_if))
             interposer_area = np.prod(interposer_area)
             interposer_carbon = self.package_mfg_carbon(package_param["interposer_node"], [interposer_area])
+            breakpoint()
             logic_scaling = open_yaml("stream/inputs/examples/carbon/logic_scaling.yaml")
             sram_scaling = open_yaml("stream/inputs/examples/carbon/sram_scaling.yaml")
             analog_scaling = open_yaml("stream/inputs/examples/carbon/analog_scaling.yaml")

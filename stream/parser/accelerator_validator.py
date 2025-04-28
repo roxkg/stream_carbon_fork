@@ -59,11 +59,13 @@ class AcceleratorValidator:
 
         # Validation outside of schema
         self.validate_core_ids()
+        # breakpoint()
         self.validate_all_cores()
-
+        # breakpoint()
         self.validate_core_connectivity()
+        # breakpoint()
         self.validate_core_mem_sharing()
-
+        # breakpoint()
         return self.is_valid
 
     def validate_core_ids(self):

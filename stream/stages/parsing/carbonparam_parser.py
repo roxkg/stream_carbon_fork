@@ -22,11 +22,17 @@ class CarbonParamParserStage(Stage):
         carbon_path: str,
         accelerator: Accelerator,
         is_chiplet: bool,
+        interposer_area:float,
+        rcy_mat_frac:float,
+        rcy_cpa_frac:float,
         **kwargs: Any,
     ):
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator
         self.is_chiplet = is_chiplet
+        self.interposer_area = interposer_area
+        self.rcy_mat_frac = rcy_mat_frac
+        self.rcy_cpa_frac = rcy_cpa_frac
         assert carbon_path.split(".")[-1] == "yaml", "Expected a yaml file as carbon parameter input"
         # build CarbonParam based on input yaml
         carbon_data = open_yaml(carbon_path)
@@ -123,16 +129,19 @@ class CarbonParamParserStage(Stage):
                     yields.append(self.yield_calc(area_list[i],defect_density[i]))
                     wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450, chip_area=area_list[i], cpa_factors=cpa[i]))
                 carbon = cpa*np.array(area_list) / yields + wastage_extra_cfp   # in g
+                carbon = ((1-self.rcy_mat_frac)*carbon) + (self.rcy_mat_frac*carbon*self.rcy_cpa_frac)
                 design_carbon_per_chiplet, design_carbon = self.design_costs(core_area_list, 8,10,700,comb, is_chiplet)
-                package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, comb, area_list, True, is_chiplet, 700, noc_area_list)
+                # breakpoint()
+                package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, comb, area_list, True, is_chiplet, 700, self.interposer_area, noc_area_list)
                 print(package_c, router_c, design_carbon_package, router_a)
-                package_carbon = package_c * 1 + router_c   # in g
+                package_carbon = package_c * 1 # + router_c   # in g
             print("design_carbon: ", design_carbon)
             #total_carbon = carbon.sum(axis=1)
             carbon = carbon + package_carbon/len(core_id_list)
             print("carbon afteer:", carbon)
             total_carbon = carbon.sum()
             cdes = design_carbon_per_chiplet.sum() + design_carbon_package.sum()
+            # breakpoint()
             print("carbon: ", carbon)
         else: 
             cpa = self.get_carbon_per_area([self.carbonparam.technology_node])
@@ -150,9 +159,10 @@ class CarbonParamParserStage(Stage):
             design_carbon_per_chiplet, design_carbon = self.design_costs(area_list, 8,10,700,combinations[0], is_chiplet)
             print("---------design calculate over-----------")
             print("design_carbon_per_chiplet:", design_carbon_per_chiplet)
-            package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, combinations[0], area_list, True, is_chiplet, 700)
+            package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, combinations[0], area_list, True, is_chiplet, 700, self.interposer_area)
             print(package_c, router_c, design_carbon_package, router_a)
             total_carbon = carbon +  package_c * 1 + router_c
+            # breakpoint()
             cdes = design_carbon_per_chiplet.sum()
         app_dev_c = self.app_cfp(power_per_core=10, num_core=8, Carbon_per_kWh=700,
                             Na=0,Ns=0,fe_time=0.2,be_time=0.05,config_time=0)
@@ -232,7 +242,7 @@ class CarbonParamParserStage(Stage):
         design_carbon_per_chiplet = design_carbon*100/1e5
         return design_carbon_per_chiplet, design_carbon
     
-    def package_costs(self, area_list, technology_node, new_area, return_router_area, is_chiplet, carbon_per_kwh, router_area_fix = 0):
+    def package_costs(self, area_list, technology_node, new_area, return_router_area, is_chiplet, carbon_per_kwh, interposer_area_fix, router_area_fix = 0):
         package_carbon = 0 
         router_carbon = 0
         router_design = 0
@@ -242,8 +252,9 @@ class CarbonParamParserStage(Stage):
         new_area = [float(x) for x in new_area]
         if is_chiplet:
             num_chiplets = len(new_area)
-            interposer_area = sum(area_list)
-            interposer_area = 47.5 * 47.5
+            # interposer_area = sum(area_list)
+            # interposer_area = len(new_area) * area_list[0]/6 * 62.67361111111111
+            interposer_area = interposer_area_fix
             num_if = len(self.accelerator.communication_manager.pair_links)
             interposer_carbon = self.package_mfg_carbon(package_param["interposer_node"], [interposer_area])
             logic_scaling = self.data["logic_scaling"]
@@ -251,6 +262,7 @@ class CarbonParamParserStage(Stage):
             analog_scaling = self.data["analog_scaling"]
             scalings = list(zip(logic_scaling["area"], analog_scaling["area"], sram_scaling["area"]))
             beolVfeol = self.data["beolVfeol_scaling"]["beolVfeol"]
+            # breakpoint()
             nodes = self.data["technology_node"]["technology_node"]
             package = self.carbonparam.package_type
             if package == "active": 
@@ -293,23 +305,28 @@ class CarbonParamParserStage(Stage):
                 new_area = router_area
                 yields = []
                 wastage_extra_cfp = []
-                if ~(np.all(np.array(technology_node) == technology_node[0])): 
-                    for i, c in enumerate(technology_node):   
-                        yields.append(self.yield_calc(new_area[i], defect_density[i]))
-                        wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450,chip_area=new_area[i],cpa_factors=cpa[i]))
-                else: 
-                    yields = self.yield_calc(sum(new_area), defect_density[0])
-                    wastage_extra_cfp = self.waste_carbon_per_die(diameter=450,chip_area=sum(new_area),cpa_factors=cpa[0])
-                    wastage_extra_cfp = np.array(wastage_extra_cfp)
-                    wastage_extra_cfp = (wastage_extra_cfp * router_area) / sum(router_area)
+                # if ~(np.all(np.array(technology_node) == technology_node[0])): 
+                #     for i, c in enumerate(technology_node):   
+                #         yields.append(self.yield_calc(new_area[i], defect_density[i]))
+                #         wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450,chip_area=new_area[i],cpa_factors=cpa[i]))
+                # else: 
+                #     yields = self.yield_calc(sum(new_area), defect_density[0])
+                #     wastage_extra_cfp = self.waste_carbon_per_die(diameter=450,chip_area=sum(new_area),cpa_factors=cpa[0])
+                #     wastage_extra_cfp = np.array(wastage_extra_cfp)
+                #     wastage_extra_cfp = (wastage_extra_cfp * router_area) / sum(router_area)
+                for i, c in enumerate(technology_node):   
+                    yields.append(self.yield_calc(new_area[i], defect_density[i]))
+                    wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450,chip_area=new_area[i],cpa_factors=cpa[i]))
                 router_carbon = cpa*np.array(new_area) / yields# + wastage_extra_cfp
-                design_carbon_per_chiplet, router_design = self.design_costs(new_area, 8, 10, 700, technology_node, False)
+                # breakpoint()
+                design_carbon_per_chiplet, router_design = self.design_costs(new_area, 8, 10, 700, technology_node, True)
                 router_carbon, router_design = np.sum(router_carbon), np.sum(design_carbon_per_chiplet)
                 if package == 'passive':
                     package_carbon = interposer_carbon* beolVfeol[nodes.index(package_param["interposer_node"])]
                 elif package == 'RDL':
                     package_carbon = interposer_carbon* beolVfeol[nodes.index(package_param["interposer_node"])]
-                    package_carbon *= package_param["RDLLayers"]/package_param["numBEOL"]   
+                    package_carbon *= package_param["RDLLayers"]/package_param["numBEOL"] 
+                    # breakpoint()  
                 elif package == 'EMIB':
                     emib_area =  [5*5]*num_if
                     emib_carbon = self.package_mfg_carbon([22]*num_if,emib_area)
@@ -327,6 +344,7 @@ class CarbonParamParserStage(Stage):
         cpa = self.get_carbon_per_area([technology_node]) 
         defect_density = self.get_defect_rate([technology_node])
         new_area = interposer_area
+        # breakpoint()
         total_area = sum(new_area)
         yields = []
         wastage_extra_cfp = []
@@ -337,6 +355,7 @@ class CarbonParamParserStage(Stage):
         """
         
         interposer_carbon = cpa*np.array(new_area) / yields #  + wastage_extra_cfp
+        interposer_carbon = ((1-self.rcy_mat_frac)*interposer_carbon) + (self.rcy_mat_frac*interposer_carbon*self.rcy_cpa_frac)
         return interposer_carbon
     
     ###############################################

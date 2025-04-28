@@ -60,6 +60,9 @@ def optimize_allocation_ga(
     carbon: str,
     opt: str,
     is_chiplet: bool,
+    interposer_area: float,
+    rcy_mat_frac:float,
+    rcy_cpa_frac:float,
     workload: str,
     mapping: str,
     mode: Literal["lbl"] | Literal["fused"], # two mode: layer by layer, layer fused
@@ -103,6 +106,9 @@ def optimize_allocation_ga(
             ],
             accelerator=hardware,  # required by AcceleratorParserStage
             carbon_path=carbon, #required by CarbonParamParserStage
+            interposer_area=interposer_area,
+            rcy_mat_frac=rcy_mat_frac,
+            rcy_cpa_frac=rcy_cpa_frac,
             is_chiplet=is_chiplet,
             opt=opt,
             workload_path=workload,  # required by ModelParserStage

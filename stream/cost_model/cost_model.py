@@ -75,6 +75,11 @@ class StreamCostModelEvaluation:
         self.total_sink_layer_output_offchip_memory_energy = results[7]
         self.total_core_to_core_link_energy = results[8]
         self.total_core_to_core_memory_energy = results[9]
+        self.schedule_trace = results[-1]
+
+        f = open(f"outputs/schedule_trace.txt", "w")
+        f.write(f"{self.schedule_trace}\n")
+        f.close()
 
         self.energy = (
             self.total_cn_onchip_energy
@@ -93,13 +98,18 @@ class StreamCostModelEvaluation:
         taskspan = self.latency/(frequency*10**9)/3600
         energy = self.energy/(10**12)/3600000
         power = energy/taskspan
-        # self.carbon = lifespan / taskspan * energy * self.carbon_param.CI_op
-        self.carbon = energy * self.carbon_param.CI_op
-        self.CD = sum(self.embodied_carbon.values()) /lifespan * taskspan * taskspan * 3600 * 1000
+        
+        self.carbon = lifespan / taskspan * energy * self.carbon_param.CI_op
+        # self.carbon = energy * self.carbon_param.CI_op
+        # self.CD = sum(self.embodied_carbon.values()) /lifespan * taskspan * taskspan * 3600 * 1000
+        self.CD = sum(self.embodied_carbon.values()) * taskspan * 3600 * 1000
         self.CD = float(self.CD)
-        # self.CD = self.embodied_carbon.sum() * taskspan * 3600 * 1000
-        self.ED = self.energy/(10**12) * taskspan * 3600
-        self.tCDP = self.CD + (self.carbon_param.lifetime * self.carbon_param.CI_op * power) * taskspan * 3600
+        # self.ED = self.energy/(10**12) * taskspan * 3600
+        # self.ED = self.carbon_param.CI_op * power * taskspan*taskspan * 3600   # g*s
+        self.ED = self.carbon_param.CI_op * power * lifespan*taskspan * 3600   # g*s
+        # self.tCDP = self.CD + (self.carbon_param.lifetime * self.carbon_param.CI_op * power) * taskspan * 3600
+        # self.tCDP = self.ED + self.CD
+        self.tCDP,self.CD,self.ED = self.compute_tcdp_per_core()
         # self.area_total, self.mem_area = self.collect_area_data()
 
     """
@@ -124,6 +134,69 @@ class StreamCostModelEvaluation:
             area_total += mem_area
         return area_total, mem_area
     """
+
+    def compute_tcdp_per_core(self):
+        CI = self.carbon_param.CI_op
+        tcdp_core = {}
+        tcdp_total = 0
+        CD_total= 0
+        ED_total= 0
+
+        for core_id, events in self.schedule_trace.items():
+            # 获取 core 的制造碳排
+            # core_obj = self.accelerator.get_core(core_id)
+            cem_core = self.embodied_carbon.get(core_id)
+            if cem_core is None:
+                assert f"Core {core_id} not found in embodied carbon data."
+                cem_core = 0  # fallback
+
+            # 分离 idle 和 active 时间段
+            active_events = [e for e in events if e["type"] == "active"]
+            idle_events = [e for e in events if e["type"] == "idle"]
+
+            # active 总运行时间
+            active_time = sum(e["latency"] for e in active_events)
+            # 总运行跨度（包括 idle）
+            if active_events:
+                span_time = max(e["end"] for e in active_events) - min(e["start"] for e in active_events)
+            else:
+                span_time = 0
+
+            # 使用哪个作为 latency
+            d_core = active_time  # if use_active_time else span_time
+
+            # operational carbon（每个 node 的 energy × CI）
+            cop_core = sum(
+                e["node_obj"].get_onchip_energy() + e["node_obj"].get_offchip_energy()
+                for e in active_events
+            ) * CI /(10**12) / 3600000
+
+            # tCDP = (Cem + Cop) × D
+            d_core = active_time / (self.carbon_param.frequency*10**9)
+            CD =  cem_core * d_core/(self.carbon_param.lifetime * 3600) *d_core * 1000
+            ED = cop_core * d_core
+            tcdp = CD + ED 
+            CD_total += CD
+            ED_total += ED
+            tcdp_total += tcdp
+        total_link_energy = (
+            self.total_cn_offchip_link_energy +
+            self.total_eviction_to_offchip_link_energy +
+            self.total_sink_layer_output_offchip_link_energy +
+            self.total_core_to_core_link_energy
+        )
+
+        total_memory_energy = (
+            self.total_cn_offchip_memory_energy +
+            self.total_eviction_to_offchip_memory_energy +
+            self.total_sink_layer_output_offchip_memory_energy +
+            self.total_core_to_core_memory_energy
+        )
+        tcdp_total += self.latency/ (self.carbon_param.frequency*10**9) * (total_link_energy + total_memory_energy) * CI /(10**12) / 3600000
+        ED_total += self.latency/ (self.carbon_param.frequency*10**9) * (total_link_energy + total_memory_energy) * CI /(10**12) / 3600000
+        return tcdp_total, CD_total, ED_total
+
+
     def collect_area_data(self): 
         area_total = 0 
         noc_area = 0

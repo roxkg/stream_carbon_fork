@@ -14,6 +14,8 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--is_chiplet", action="store_true", default=False)
+parser.add_argument("--interposer_area", type=float, default=0.0)
+parser.add_argument("--rcy_mat_frac", type=float, default=0.0)
 args = parser.parse_args()
 _logging_level = _logging.INFO
 _logging_format = "%(asctime)s - %(name)s - [%(filename)s:%(funcName)s:%(lineno)d] - %(levelname)s - %(message)s"
@@ -22,12 +24,16 @@ _logging.basicConfig(level=_logging_level, format=_logging_format)
 ############################################INPUTS############################################
 accelerator = "stream/inputs/examples/hardware/carbon/simba.yaml"
 carbon_path = "stream/inputs/examples/carbon/relative_carbon_intensity.yaml"
-workload_path = "stream/inputs/examples/workload/resnet50.onnx"
+workload_path = "stream/inputs/examples/workload/resnet18.onnx"
 mapping_path = "stream/inputs/examples/mapping/simba.yaml"
 mode = "fused"
-direction = "tCDP2"
+direction = "test_recycle"
 is_chiplet = args.is_chiplet
+interposer_area = args.interposer_area
+rcy_mat_frac = args.rcy_mat_frac
+rcy_cpa_frac = 0.4
 # is_chiplet = False
+interposer_area = 2256
 layer_stacks = [tuple(range(0, 11)), tuple(range(11, 22))] + list((i,) for i in range(22, 49))
 nb_ga_generations = 4
 nb_ga_individuals = 4
@@ -38,7 +44,7 @@ hw_name = accelerator.split("/")[-1].split(".")[0]
 wl_name = re.split(r"/|\.", workload_path)[-1]
 if wl_name == "onnx":
     wl_name = re.split(r"/|\.", workload_path)[-2]
-experiment_id = f"{hw_name}-{wl_name}-{mode}-{direction}-{is_chiplet}-genetic_algorithm"
+experiment_id = f"{hw_name}-{wl_name}-{mode}-{direction}-{is_chiplet}-{interposer_area}-{rcy_mat_frac}-genetic_algorithm"
 ######################################################################
 
 ##############PLOTTING###############
@@ -61,6 +67,9 @@ scme = optimize_allocation_ga(
     hardware=accelerator,
     workload=workload_path,
     carbon=carbon_path,
+    interposer_area=interposer_area,
+    rcy_mat_frac=rcy_mat_frac,
+    rcy_cpa_frac=rcy_cpa_frac,
     opt="tCDP",
     is_chiplet= is_chiplet,
     mapping=mapping_path,

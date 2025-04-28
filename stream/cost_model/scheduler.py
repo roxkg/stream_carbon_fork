@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 from operator import itemgetter
 from typing import TYPE_CHECKING
@@ -248,6 +249,8 @@ def schedule_graph(
     total_sink_layer_output_offchip_memory_energy = 0
     total_core_to_core_link_energy = 0
     total_core_to_core_memory_energy = 0
+    schedule_trace=defaultdict(list)
+    last_core_end = defaultdict(int)
 
     core_ids = set(n.chosen_core_allocation for n in G.node_list)
     assert (
@@ -411,6 +414,27 @@ def schedule_graph(
         best_candidate.set_end(end)
         cores_idle_from[core_id] = end
 
+        # record start & end time for each core and each node
+        if last_core_end[core_id] < start:
+            schedule_trace[core_id].append({
+                "type": "idle",
+                "start": last_core_end[core_id],
+                "end": start,
+                "latency": start - last_core_end[core_id],
+            })
+
+        schedule_trace[core_id].append({
+            "type": "active",
+            "node_id": best_candidate.id,
+            "group": best_candidate.group,
+            "start": start,
+            "end": end,
+            "latency": end - start,
+            "node_obj": best_candidate,
+        })
+
+        last_core_end[core_id] = end
+
         # Add the computation energy of running this node
         total_cn_onchip_energy += best_candidate.get_onchip_energy()
         total_cn_offchip_memory_energy += best_candidate.get_offchip_energy()
@@ -484,4 +508,5 @@ def schedule_graph(
         total_sink_layer_output_offchip_memory_energy,
         total_core_to_core_link_energy,
         total_core_to_core_memory_energy,
+        schedule_trace,
     )

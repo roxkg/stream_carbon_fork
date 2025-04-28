@@ -671,9 +671,11 @@ class CostModelEvaluation(CostModelEvaluationABC):
         energy = self.energy_total/(10**12)/3600000
         taskspan = self.latency_total2/(frequency*10**9)/3600
         power = energy/taskspan   # kW
-        # CD = Cemb/lifespan * taskspan *taskspan * 3600   #g * s
-        CD = Cemb *taskspan * 3600   #g * s
-        ED = self.carbonparam.lifetime * self.carbonparam.CI_op * power * taskspan * 3600   # g*s
+        CD = Cemb/lifespan * taskspan *taskspan * 3600   #g * s
+        # CD = Cemb*1000*taskspan * 3600   #g * s
+        # ED = self.carbonparam.lifetime * self.carbonparam.CI_op * power * taskspan * 3600   # g*s
+        # ED = self.energy_total/(10**12) * taskspan * 3600
+        ED = self.carbonparam.CI_op * power * taskspan *taskspan * 3600   # g*s
         self.tCDP = CD +ED
 
     def calc_double_buffer_flag(self) -> None:
