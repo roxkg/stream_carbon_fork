@@ -1,4 +1,4 @@
-name: sambanova_chiplet
+name: sambanova_chiplet_05
 
 memories:
 
@@ -66,7 +66,7 @@ operational_array:
   multiplier_energy: 0.02
   multiplier_area: 1
   dimensions: [D1, D2, D3]   # 520 PCUs each PCU has 160 PE, each PCU has 4PE for one lane
-  sizes: [40,4, 520]  
+  sizes: [40,4, 65]  
 
 dataflows:
   D1:
@@ -74,7 +74,7 @@ dataflows:
   D2:
     - C, 4
   D3:
-    - K, 520
+    - K, 130
 
 noc_area: 84
-core_area: 566
+core_area: 70.8

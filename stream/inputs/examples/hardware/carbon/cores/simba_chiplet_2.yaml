@@ -1,5 +1,5 @@
 # technology node in paper: 16nm
-name: simba_chiplet
+name: simba_chiplet_2area
 
 memories:
 
@@ -77,11 +77,11 @@ memories:
     served_dimensions: [D3, D4]
 
   global_buffer:
-    size: 2097152  # 2048 depth * 256 width * 4 banks
-    r_bw: 1024  # 256 bits width * 4 banks
-    w_bw: 1024
-    r_cost: 18  # Example cost, refine with more details
-    w_cost: 18.8
+    size: 4680000  # 2048 depth * 256 width * 4 banks
+    r_bw: 2048  # 256 bits width * 4 banks
+    w_bw: 2048
+    r_cost: 47.4  # Example cost, refine with more details
+    w_cost: 49.2
     # area: 0
     area: 666
     r_port: 1
@@ -102,15 +102,15 @@ memories:
 
 
 operational_array:
-  multiplier_energy: 0.1 # 0.04  # Refine with more accurate data if available
+  multiplier_energy: 0.1  # Refine with more accurate data if available
   multiplier_area: 1  # unit   1mac area
   # D1/2 = 4x4 PE array. Each PE has 8 vector MACS (D3) that process 8 elements (D4) in parallel
   dimensions: [D1, D2, D3, D4]
-  sizes: [4, 4, 8, 8]
+  sizes: [8, 4, 8, 8]
 
 dataflows:
   D1:
-    - K, 4
+    - K, 8
   D2:
     - C, 4
   D3:
@@ -118,5 +118,7 @@ dataflows:
   D4:
     - C, 8
 
-noc_area: 2.08
-core_area: 3.92
+noc_area: 2.08    #2.08
+core_area: 7.84
+
+#everything is *2 larger

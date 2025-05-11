@@ -113,13 +113,47 @@ class CarbonParamParserStage(Stage):
                 core_id_list.append(core.id)
         if is_chiplet: 
             area_list = [ x + y for x, y in zip(noc_area_list, core_area_list)]
+            #SIMBA16
+            # area_list = [10.9,10.9,10.9,10.9, 10.9,10.9,10.9,10.9, 10.9,10.9,10.9,10.9, 10.9,10.9,10.9,10.9]
+            # noc_area_list = [2.08, 2.08, 2.08, 2.08,2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08]
+            # core_area_list = [8.82,8.82,8.82,8.82, 8.82,8.82,8.82,8.82, 8.82,8.82,8.82,8.82, 8.82,8.82,8.82,8.82]
+            # # 4core_1area
+            
+            # area_list = [37.36,37.36,37.36,37.36]
+            # noc_area_list = [2.08,2.08,2.08,2.08]
+            # core_area_list = [35.28,35.28,35.28,35.28]
+            # 12core_1area
+            corearea = core_area_list[0]
+            refactor = corearea*36/16
+            totalarea = refactor + 2.08
+            area_list = [totalarea, totalarea, totalarea, totalarea, 
+                         totalarea, totalarea, totalarea, totalarea,
+                         totalarea, totalarea, totalarea, totalarea,
+                         totalarea, totalarea, totalarea, totalarea
+                         ]
+            noc_area_list = [2.08,2.08,2.08,2.08,2.08,2.08,2.08,2.08,
+                             2.08,2.08,2.08,2.08,2.08,2.08,2.08,2.08
+                             ]
+            core_area_list = [refactor,refactor,refactor,refactor, 
+                              refactor,refactor, refactor,refactor, 
+                              refactor,refactor, refactor,refactor, 
+                              refactor,refactor, refactor,refactor
+                              ]
+            
+            # breakpoint()
+            # # 9 core_1area
+            # area_list = [209.78,209.78,209.78,209.78,209.78,209.78,209.78,209.78,209.78]
+            # noc_area_list = [84,84,84,84,84,84,84,84,84]
+            # core_area_list = [125.78,125.78,125.78,125.78,125.78,125.78,125.78,125.78,125.78]
+        
         else: 
             area_list = core_area_list
         combinations = list(it.product([self.carbonparam.technology_node], repeat = len(area_list)))
         print("area list: ", area_list, "combinations: ", combinations)
         
         if is_chiplet:
-            carbon = np.zeros((len(combinations), len(area_list)))
+            # carbon = np.zeros((len(combinations), len(area_list)))
+            carbon = np.zeros((len(combinations), 12))
             for n, comb in enumerate(combinations): 
                 cpa = self.get_carbon_per_area(comb)
                 defect_density = self.get_defect_rate(comb) 
@@ -130,14 +164,17 @@ class CarbonParamParserStage(Stage):
                     wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450, chip_area=area_list[i], cpa_factors=cpa[i]))
                 carbon = cpa*np.array(area_list) / yields + wastage_extra_cfp   # in g
                 carbon = ((1-self.rcy_mat_frac)*carbon) + (self.rcy_mat_frac*carbon*self.rcy_cpa_frac)
+                # breakpoint()
                 design_carbon_per_chiplet, design_carbon = self.design_costs(core_area_list, 8,10,700,comb, is_chiplet)
                 # breakpoint()
                 package_c, router_c, design_carbon_package, router_a = self.package_costs(area_list, comb, area_list, True, is_chiplet, 700, self.interposer_area, noc_area_list)
                 print(package_c, router_c, design_carbon_package, router_a)
                 package_carbon = package_c * 1 # + router_c   # in g
+                # breakpoint()
             print("design_carbon: ", design_carbon)
             #total_carbon = carbon.sum(axis=1)
             carbon = carbon + package_carbon/len(core_id_list)
+            # carbon = ((1-self.rcy_mat_frac)*carbon) + (self.rcy_mat_frac*carbon*self.rcy_cpa_frac)
             print("carbon afteer:", carbon)
             total_carbon = carbon.sum()
             cdes = design_carbon_per_chiplet.sum() + design_carbon_package.sum()
@@ -192,7 +229,9 @@ class CarbonParamParserStage(Stage):
         # emb_c = des_c + mfg_c + eol_c + app_c     
         if is_chiplet:
             # emb_c = dict(zip(core_id_list,[mfg_c+(des_c+eol_c+app_c)/len(core_id_list)]))
-            emb_c = dict(zip(core_id_list, mfg_c+(des_c+eol_c+app_c)/len(core_id_list)))
+            # emb_c = dict(zip(core_id_list, mfg_c+(des_c+eol_c+app_c)/len(core_id_list)))
+            mfg_c = (sum(mfg_c)+(des_c+eol_c+app_c))/len(core_id_list)
+            emb_c = dict.fromkeys(core_id_list, mfg_c)
             print("core id list: ", core_id_list)
         else:
             value = float((des_c + mfg_c + eol_c + app_c)/len(core_id_list))
@@ -200,6 +239,7 @@ class CarbonParamParserStage(Stage):
             # emb_c = dict(zip(core_id_list,value_list))
         print("emb_c: ", emb_c)
         print("embc_core: ", emb_c[0])
+        # breakpoint()
         return emb_c
 
     def design_costs(self, areas, Transistors_per_gate,Power_per_core,Carbon_per_kWh, technology_node, is_chiplet):

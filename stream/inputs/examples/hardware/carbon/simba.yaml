@@ -104,4 +104,4 @@ core_connectivity:
   - 34, 35
 
 bandwidth: 32
-unit_energy_cost: 0
+unit_energy_cost: 56

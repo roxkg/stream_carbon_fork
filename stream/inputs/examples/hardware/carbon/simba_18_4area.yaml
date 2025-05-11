@@ -1,0 +1,57 @@
+name: simba_package_18_4area
+
+cores:
+  # 4 simba chiplets
+  0: simba_chiplet_4.yaml
+  1: simba_chiplet_4.yaml
+  2: simba_chiplet_4.yaml
+  3: simba_chiplet_4.yaml
+  4: simba_chiplet_4.yaml
+  5: simba_chiplet_4.yaml
+  6: simba_chiplet_4.yaml
+  7: simba_chiplet_4.yaml
+  8: simba_chiplet_4.yaml
+  9: simba_chiplet_4.yaml
+  10: simba_chiplet_4.yaml
+  11: simba_chiplet_4.yaml
+  12: simba_chiplet_4.yaml
+  13: simba_chiplet_4.yaml
+  14: simba_chiplet_4.yaml
+  15: simba_chiplet_4.yaml
+  16: simba_chiplet_4.yaml
+  17: simba_chiplet_4.yaml
+
+offchip_core: simba_offchip.yaml
+
+core_connectivity:
+  # 2D mesh
+  - 0, 1
+  - 0, 6
+  - 1, 2
+  - 1, 7
+  - 2, 3
+  - 2, 8
+  - 3, 4
+  - 3, 9
+  - 4, 5
+  - 4, 10
+  - 5, 11
+  - 6, 7
+  - 6, 12
+  - 7, 8
+  - 7, 13
+  - 8, 9
+  - 8, 14
+  - 9, 10
+  - 9, 15
+  - 10, 11
+  - 10, 16
+  - 11, 17
+  - 12, 13
+  - 13, 14
+  - 14, 15
+  - 15, 16
+  - 16, 17
+
+bandwidth: 128
+unit_energy_cost: 0

@@ -3,8 +3,8 @@ name: simba_offchip
 memories:
   dram:
     size: 10000000000
-    r_bw: 64
-    w_bw: 64
+    r_bw: 256
+    w_bw: 256
     r_cost: 100
     w_cost: 100
     area: 0

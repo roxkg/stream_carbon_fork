@@ -65,9 +65,12 @@ class CarbonEvaluation:
             activity=[0.2, 0.667, 0.1]
             op_carbon[n,:-1] = self.operational_costs(activity, comb, area*self.scme.energy_use/sum(area), self.scme.lifetime, 700)
             emb_carbon[n] = sum(carbon[n]) + (sum(design_carbon[n])*100/1e5)
-            print(sum(design_carbon[n])*100/1e5)
+            print("node: ", comb, "emb_carbon:", carbon[n], design_carbon[n]*100/1e5)
+            print(emb_carbon[n])
+            # print(sum(design_carbon[n])*100/1e5)
             # print(carbon[n])
             op_carbon_1[n:-1] = sum(op_carbon[n,:-1])
+        # print("emb_carbon:", emb_carbon)
         """
         #App-dev CFP
         app_dev_c = self.app_cfp(power_per_core=10, num_core=8, Carbon_per_kWh=700,
@@ -304,7 +307,7 @@ class CarbonEvaluation:
             num_if = int(np.ceil(num_if))
             interposer_area = np.prod(interposer_area)
             interposer_carbon = self.package_mfg_carbon(package_param["interposer_node"], [interposer_area])
-            breakpoint()
+            # breakpoint()
             logic_scaling = open_yaml("stream/inputs/examples/carbon/logic_scaling.yaml")
             sram_scaling = open_yaml("stream/inputs/examples/carbon/sram_scaling.yaml")
             analog_scaling = open_yaml("stream/inputs/examples/carbon/analog_scaling.yaml")
@@ -338,7 +341,7 @@ class CarbonEvaluation:
                 router_area = []
                 for index in range(len(self.scme.area_list)):
                     router_area.append(0.33/scalings[2][index])
-                print("router_area:", router_area)
+                # print("router_area:", router_area)
                 # router_carbon= self.package_mfg_carbon(technology_node, router_area)
                 cpa = self.get_carbon_per_area(technology_node) 
                 defect_density = self.get_defect_rate(technology_node)
@@ -446,7 +449,7 @@ class CarbonEvaluation:
         return design_cfp_total,mfg_cfp_total,eol_cfp_total,ope_cfp_total,app_cfp_total
     
 
-input_data = open_yaml("stream/inputs/testing/carbon_validation/GA102.yaml")
+input_data = open_yaml("stream/inputs/testing/carbon_validation/test.yaml")
 area_dict = {item["type"]: item["area"] for item in input_data["area_list"]}
 
 hardware = CarbonModel(CI_op=input_data["CI_op"], 

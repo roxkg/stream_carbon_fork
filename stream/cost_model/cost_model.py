@@ -101,15 +101,15 @@ class StreamCostModelEvaluation:
         
         self.carbon = lifespan / taskspan * energy * self.carbon_param.CI_op
         # self.carbon = energy * self.carbon_param.CI_op
-        # self.CD = sum(self.embodied_carbon.values()) /lifespan * taskspan * taskspan * 3600 * 1000
-        self.CD = sum(self.embodied_carbon.values()) * taskspan * 3600 * 1000
+        self.CD = sum(self.embodied_carbon.values()) /lifespan * taskspan * taskspan * 3600 * 1000
+        # self.CD = sum(self.embodied_carbon.values()) * taskspan * 3600 * 1000
         self.CD = float(self.CD)
         # self.ED = self.energy/(10**12) * taskspan * 3600
-        # self.ED = self.carbon_param.CI_op * power * taskspan*taskspan * 3600   # g*s
-        self.ED = self.carbon_param.CI_op * power * lifespan*taskspan * 3600   # g*s
+        self.ED = self.carbon_param.CI_op * power * taskspan*taskspan * 3600   # g*s
+        # self.ED = self.carbon_param.CI_op * power * lifespan*taskspan * 3600   # g*s
         # self.tCDP = self.CD + (self.carbon_param.lifetime * self.carbon_param.CI_op * power) * taskspan * 3600
-        # self.tCDP = self.ED + self.CD
-        self.tCDP,self.CD,self.ED = self.compute_tcdp_per_core()
+        self.tCDP = self.ED + self.CD
+        # self.tCDP,self.CD,self.ED = self.compute_tcdp_per_core()
         # self.area_total, self.mem_area = self.collect_area_data()
 
     """

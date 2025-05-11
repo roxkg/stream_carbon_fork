@@ -1,0 +1,50 @@
+name: sambanova_package
+
+cores:
+  0: sambanova_chiplet_16core.yaml
+  1: sambanova_chiplet_16core.yaml
+  2: sambanova_chiplet_16core.yaml
+  3: sambanova_chiplet_16core.yaml
+  4: sambanova_chiplet_16core.yaml
+  5: sambanova_chiplet_16core.yaml
+  6: sambanova_chiplet_16core.yaml
+  7: sambanova_chiplet_16core.yaml
+  8: sambanova_chiplet_16core.yaml
+  9: sambanova_chiplet_16core.yaml
+  10: sambanova_chiplet_16core.yaml
+  11: sambanova_chiplet_16core.yaml
+  12: sambanova_chiplet_16core.yaml
+  13: sambanova_chiplet_16core.yaml
+  14: sambanova_chiplet_16core.yaml
+  15: sambanova_chiplet_16core.yaml
+
+offchip_core: sambanova_offchip.yaml
+
+core_connectivity:
+  - 0, 1
+  - 0, 4
+  - 1, 2
+  - 1, 5
+  - 2, 3
+  - 2, 6
+  - 3, 7
+  - 4, 5
+  - 4, 8
+  - 5, 6
+  - 5, 9
+  - 6, 7
+  - 6, 10
+  - 7, 11
+  - 8, 9
+  - 8, 12
+  - 9, 10
+  - 9, 13
+  - 10, 11
+  - 10, 14
+  - 11, 15
+  - 12, 13
+  - 13, 14
+  - 14, 15
+
+bandwidth: 640
+unit_energy_cost: 1120

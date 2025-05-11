@@ -1,0 +1,9 @@
+# g CO2/kWh
+CI_op: Coal
+CI_em: Gas
+lifetime: 17520
+# GHz
+frequency: 1.8
+technology_node: 5
+on_ratio: 0.2
+package_type: "passive"

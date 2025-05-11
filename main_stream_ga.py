@@ -16,24 +16,29 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--is_chiplet", action="store_true", default=False)
 parser.add_argument("--interposer_area", type=float, default=0.0)
 parser.add_argument("--rcy_mat_frac", type=float, default=0.0)
+parser.add_argument("--accelerator", type=str, default="stream/inputs/examples/hardware/carbon/simba.yaml")
 args = parser.parse_args()
 _logging_level = _logging.INFO
 _logging_format = "%(asctime)s - %(name)s - [%(filename)s:%(funcName)s:%(lineno)d] - %(levelname)s - %(message)s"
 _logging.basicConfig(level=_logging_level, format=_logging_format)
 
 ############################################INPUTS############################################
-accelerator = "stream/inputs/examples/hardware/carbon/simba.yaml"
-carbon_path = "stream/inputs/examples/carbon/relative_carbon_intensity.yaml"
-workload_path = "stream/inputs/examples/workload/resnet18.onnx"
+accelerator = args.accelerator
+# accelerator = "stream/inputs/examples/hardware/carbon/simba.yaml"
+carbon_path = "stream/inputs/examples/carbon/simba.yaml"
+workload_path = "stream/inputs/examples/workload/resnet50.onnx"
 mapping_path = "stream/inputs/examples/mapping/simba.yaml"
 mode = "fused"
-direction = "test_recycle"
+direction = "simba_16core"
 is_chiplet = args.is_chiplet
 interposer_area = args.interposer_area
 rcy_mat_frac = args.rcy_mat_frac
+# rcy_mat_frac = 0.9
 rcy_cpa_frac = 0.4
-# is_chiplet = False
-interposer_area = 2256
+# is_chiplet = True
+# interposer_area = 2441
+# interposer_area = 2256 # 4.7*3 + 25.4951*2)*(4.7*2 + 25.4951) # 1463.22
+# interposer_area = (4.7*7 + 3.15*6)*(4.7*7 + 3.15*6) # 1463.22
 layer_stacks = [tuple(range(0, 11)), tuple(range(11, 22))] + list((i,) for i in range(22, 49))
 nb_ga_generations = 4
 nb_ga_individuals = 4

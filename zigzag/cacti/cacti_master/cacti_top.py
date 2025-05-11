@@ -23,7 +23,8 @@ args = parser.parse_args()
 
 
 mem_pool_path: str = args.mem_pool_path
-cacti_master_path = os.path.dirname(mem_pool_path)
+# cacti_master_path = os.path.dirname(mem_pool_path)
+cacti_master_path = "./"
 print(f"{cacti_master_path=}")
 
 self_gen_folder_name = "self_gen"

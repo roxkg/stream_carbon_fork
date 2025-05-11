@@ -1,0 +1,13 @@
+name: sambanova_package
+
+cores:
+  0: sambanova_chiplet_12.yaml
+  1: sambanova_chiplet_12.yaml
+
+offchip_core: sambanova_offchip.yaml
+
+core_connectivity:
+  - 0, 1
+
+bandwidth: 6144
+unit_energy_cost: 7372.8

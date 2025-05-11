@@ -9,5 +9,5 @@ offchip_core: sambanova_offchip.yaml
 core_connectivity:
   - 0, 1
 
-bandwidth: 64
-unit_energy_cost: 0
+bandwidth: 5120
+unit_energy_cost: 8960

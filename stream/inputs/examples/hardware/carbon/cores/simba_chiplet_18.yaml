@@ -21,9 +21,9 @@ memories:
     served_dimensions: []
 
   weight_buffer:
-    size: 32768  # 4096 depth * 8 width
-    r_bw: 64  # 8 bits/bank * 8 banks
-    w_bw: 64
+    size: 40960  # 4096 depth * 8 width
+    r_bw: 80  # 8 bits/bank * 8 banks
+    w_bw: 80
     r_cost: 0.4  
     w_cost: 0.4
     #area: 0
@@ -39,9 +39,9 @@ memories:
     served_dimensions: [D3, D4]
 
   accumulation_buffer:
-    size: 3072   # 128 depth * 24 width
-    r_bw: 192  # partial sums are 24 bits * 8 units reading in parallel
-    w_bw: 192
+    size: 3840   # 128 depth * 24 width
+    r_bw: 240  # partial sums are 24 bits * 8 units reading in parallel
+    w_bw: 240
     r_cost: 0.15  # TODO
     w_cost: 0.21
     # area: 0
@@ -59,9 +59,9 @@ memories:
     served_dimensions: [D3, D4]
 
   input_buffer:
-    size: 524288   # 8192 depth * 64 width
-    r_bw: 64
-    w_bw: 64
+    size: 655360   # 8192 depth * 64 width
+    r_bw: 80
+    w_bw: 80
     r_cost: 2.7  # TODO
     w_cost: 1.9  # TODO
     # area: 0
@@ -77,11 +77,11 @@ memories:
     served_dimensions: [D3, D4]
 
   global_buffer:
-    size: 2097152  # 2048 depth * 256 width * 4 banks
-    r_bw: 1024  # 256 bits width * 4 banks
-    w_bw: 1024
-    r_cost: 18  # Example cost, refine with more details
-    w_cost: 18.8
+    size: 3774880  # 2048 depth * 256 width * 4 banks
+    r_bw: 1848  # 256 bits width * 4 banks
+    w_bw: 1848
+    r_cost: 39.2  # Example cost, refine with more details
+    w_cost: 40.6
     # area: 0
     area: 666
     r_port: 1
@@ -106,17 +106,17 @@ operational_array:
   multiplier_area: 1  # unit   1mac area
   # D1/2 = 4x4 PE array. Each PE has 8 vector MACS (D3) that process 8 elements (D4) in parallel
   dimensions: [D1, D2, D3, D4]
-  sizes: [4, 4, 8, 8]
+  sizes: [4, 6, 8, 10]
 
 dataflows:
   D1:
     - K, 4
   D2:
-    - C, 4
+    - C, 6
   D3:
     - K, 8
   D4:
-    - C, 8
+    - C, 10
 
 noc_area: 2.08
-core_area: 3.92
+core_area: 7

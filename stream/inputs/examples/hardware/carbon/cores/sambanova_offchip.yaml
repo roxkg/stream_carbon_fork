@@ -4,43 +4,26 @@ memories:
 
   hbm:
     size: 549755813888  # 64 GiB in bits
-    r_bw: 16384
-    w_bw: 16384
-    r_cost: 10
-    w_cost: 10
-    area: 5000
-    r_port: 1
-    w_port: 1
-    rw_port: 0
-    latency: 5
-    operands: [I1, I2, O]
-    ports:
-      - fh: w_port_1
-        tl: r_port_1
-      - fh: w_port_1
-        tl: r_port_1
-      - fh: w_port_1
-        tl: r_port_1
-        fl: w_port_1
-        th: r_port_1
-    served_dimensions: [D1, D2]
-
-  expert_ddr:
-    size: 1319413953331  # 1.5 TiB in bits
-    r_bw: 1600
-    w_bw: 1600
+    r_bw: 7200
+    w_bw: 7200
     r_cost: 100
     w_cost: 100
-    area: 10000
-    r_port: 1
-    w_port: 1
-    rw_port: 0
-    latency: 20
-    operands: [I2]
+    area: 5000
+    r_port: 0
+    w_port: 0
+    rw_port: 1
+    latency: 1
+    operands: [I1, I2, O]
     ports:
-      - fh: w_port_1
-        tl: r_port_1
-    served_dimensions: [D1,D2]
+      - fh: rw_port_1
+        tl: rw_port_1
+      - fh: rw_port_1
+        tl: rw_port_1
+      - fh: rw_port_1
+        tl: rw_port_1
+        fl: rw_port_1
+        th: rw_port_1
+    served_dimensions: [D1, D2]
 
 operational_array:
   multiplier_energy: 0

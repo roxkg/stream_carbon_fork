@@ -66,7 +66,7 @@ operational_array:
   multiplier_energy: 0.02
   multiplier_area: 1
   dimensions: [D1, D2, D3]   # 520 PCUs each PCU has 160 PE, each PCU has 4PE for one lane
-  sizes: [40,4, 520]  
+  sizes: [40,4, 208]  
 
 dataflows:
   D1:
@@ -74,7 +74,7 @@ dataflows:
   D2:
     - C, 4
   D3:
-    - K, 520
+    - K, 208
 
 noc_area: 84
-core_area: 566
+core_area: 226.4

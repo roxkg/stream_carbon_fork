@@ -1,12 +1,12 @@
 # technology node in paper: 16nm
-name: simba_chiplet
+name: simba_chiplet_2area
 
 memories:
 
   weight_registers:
-    size: 512  # 8 word-bits * 64 cluster_size
-    r_bw: 8
-    w_bw: 8
+    size: 2048  # 8 word-bits * 64 cluster_size
+    r_bw: 32
+    w_bw: 32
     r_cost: 0.08  # TODO
     w_cost: 0.08  # TODO
     area: 0
@@ -21,11 +21,11 @@ memories:
     served_dimensions: []
 
   weight_buffer:
-    size: 32768  # 4096 depth * 8 width
-    r_bw: 64  # 8 bits/bank * 8 banks
-    w_bw: 64
-    r_cost: 0.4  
-    w_cost: 0.4
+    size: 131072  # 4096 depth * 8 width
+    r_bw: 256  # 8 bits/bank * 8 banks
+    w_bw: 256
+    r_cost: 1.3  # TODO
+    w_cost: 1.7
     #area: 0
     area: 218
     r_port: 1
@@ -39,11 +39,11 @@ memories:
     served_dimensions: [D3, D4]
 
   accumulation_buffer:
-    size: 3072   # 128 depth * 24 width
-    r_bw: 192  # partial sums are 24 bits * 8 units reading in parallel
-    w_bw: 192
-    r_cost: 0.15  # TODO
-    w_cost: 0.21
+    size: 12288   # 128 depth * 24 width
+    r_bw: 768  # partial sums are 24 bits * 8 units reading in parallel
+    w_bw: 768
+    r_cost: 1.5  # TODO
+    w_cost: 1.6
     # area: 0
     area: 128
     r_port: 1
@@ -59,11 +59,11 @@ memories:
     served_dimensions: [D3, D4]
 
   input_buffer:
-    size: 524288   # 8192 depth * 64 width
-    r_bw: 64
-    w_bw: 64
-    r_cost: 2.7  # TODO
-    w_cost: 1.9  # TODO
+    size: 2097152   # 8192 depth * 64 width
+    r_bw: 256
+    w_bw: 256
+    r_cost: 7.4  # TODO
+    w_cost: 6.7  # TODO
     # area: 0
     area: 58
     r_port: 1
@@ -77,11 +77,11 @@ memories:
     served_dimensions: [D3, D4]
 
   global_buffer:
-    size: 2097152  # 2048 depth * 256 width * 4 banks
-    r_bw: 1024  # 256 bits width * 4 banks
-    w_bw: 1024
-    r_cost: 18  # Example cost, refine with more details
-    w_cost: 18.8
+    size: 9200000  # 2048 depth * 256 width * 4 banks
+    r_bw: 4096  # 256 bits width * 4 banks
+    w_bw: 4096
+    r_cost: 140  # Example cost, refine with more details
+    w_cost: 163
     # area: 0
     area: 666
     r_port: 1
@@ -102,15 +102,15 @@ memories:
 
 
 operational_array:
-  multiplier_energy: 0.1 # 0.04  # Refine with more accurate data if available
+  multiplier_energy: 0.04  # Refine with more accurate data if available
   multiplier_area: 1  # unit   1mac area
   # D1/2 = 4x4 PE array. Each PE has 8 vector MACS (D3) that process 8 elements (D4) in parallel
   dimensions: [D1, D2, D3, D4]
-  sizes: [4, 4, 8, 8]
+  sizes: [8, 4, 8, 8]
 
 dataflows:
   D1:
-    - K, 4
+    - K, 8
   D2:
     - C, 4
   D3:
@@ -118,5 +118,7 @@ dataflows:
   D4:
     - C, 8
 
-noc_area: 2.08
-core_area: 3.92
+noc_area: 2.08    #2.08
+core_area: 15.68
+
+#everything is *2 larger
