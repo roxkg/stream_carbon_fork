@@ -124,20 +124,13 @@ class CarbonParamParserStage(Stage):
             # core_area_list = [35.28,35.28,35.28,35.28]
             # 12core_1area
             corearea = core_area_list[0]
-            refactor = corearea*36/16
+            refactor = corearea*36/4
             totalarea = refactor + 2.08
-            area_list = [totalarea, totalarea, totalarea, totalarea, 
-                         totalarea, totalarea, totalarea, totalarea,
-                         totalarea, totalarea, totalarea, totalarea,
-                         totalarea, totalarea, totalarea, totalarea
+            area_list = [totalarea, totalarea, totalarea, totalarea,
                          ]
-            noc_area_list = [2.08,2.08,2.08,2.08,2.08,2.08,2.08,2.08,
-                             2.08,2.08,2.08,2.08,2.08,2.08,2.08,2.08
+            noc_area_list = [2.08,2.08,2.08,2.08,
                              ]
-            core_area_list = [refactor,refactor,refactor,refactor, 
-                              refactor,refactor, refactor,refactor, 
-                              refactor,refactor, refactor,refactor, 
-                              refactor,refactor, refactor,refactor
+            core_area_list = [refactor,refactor,refactor,refactor,
                               ]
             
             # breakpoint()
@@ -153,7 +146,7 @@ class CarbonParamParserStage(Stage):
         
         if is_chiplet:
             # carbon = np.zeros((len(combinations), len(area_list)))
-            carbon = np.zeros((len(combinations), 12))
+            carbon = np.zeros((len(combinations), 2))
             for n, comb in enumerate(combinations): 
                 cpa = self.get_carbon_per_area(comb)
                 defect_density = self.get_defect_rate(comb) 
