@@ -24,15 +24,15 @@ _logging.basicConfig(level=_logging_level, format=_logging_format)
 
 ############################################INPUTS############################################
 accelerator = args.accelerator
-accelerator = "stream/inputs/examples/hardware/carbon/simba_area_try.yaml"
+# accelerator = "stream/inputs/examples/hardware/carbon/simba.yaml"
 carbon_path = "stream/inputs/examples/carbon/simba.yaml"
 workload_path = "stream/inputs/examples/workload/resnet50.onnx"
 mapping_path = "stream/inputs/examples/mapping/simba.yaml"
 mode = "fused"
-direction = "simba_8_4core"
+direction = "simba_16core"
 is_chiplet = args.is_chiplet
 interposer_area = args.interposer_area
-interposer_area = 2265.76
+# interposer_area = 2271
 rcy_mat_frac = args.rcy_mat_frac
 # rcy_mat_frac = 0.9
 rcy_cpa_frac = 0.4

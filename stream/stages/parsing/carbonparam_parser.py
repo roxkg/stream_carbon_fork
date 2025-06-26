@@ -113,25 +113,50 @@ class CarbonParamParserStage(Stage):
                 core_id_list.append(core.id)
         if is_chiplet: 
             area_list = [ x + y for x, y in zip(noc_area_list, core_area_list)]
-            #SIMBA16
-            # area_list = [10.9,10.9,10.9,10.9, 10.9,10.9,10.9,10.9, 10.9,10.9,10.9,10.9, 10.9,10.9,10.9,10.9]
-            # noc_area_list = [2.08, 2.08, 2.08, 2.08,2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08, 2.08]
-            # core_area_list = [8.82,8.82,8.82,8.82, 8.82,8.82,8.82,8.82, 8.82,8.82,8.82,8.82, 8.82,8.82,8.82,8.82]
-            # # 4core_1area
-            
-            # area_list = [37.36,37.36,37.36,37.36]
-            # noc_area_list = [2.08,2.08,2.08,2.08]
-            # core_area_list = [35.28,35.28,35.28,35.28]
             # 12core_1area
+            # corearea = core_area_list[0]
+            # refactor = corearea*2/4
+            # totalarea = refactor + 84*0.86
+            # area_list = [totalarea, totalarea, totalarea, totalarea
+                        #  ,totalarea, totalarea, totalarea, totalarea,
+                        #  totalarea, 
+                        #  totalarea, totalarea, totalarea,totalarea, totalarea, totalarea, totalarea,
+                        #  totalarea, totalarea, totalarea, totalarea,totalarea, totalarea, totalarea, totalarea,
+                        #  totalarea, totalarea, totalarea, totalarea,totalarea, totalarea, totalarea, totalarea,
+                        #  totalarea, totalarea, totalarea, totalarea,
+                        #  ]
+            # noc_area_list = [84*0.86,84*0.86,84*0.86,84*0.86,
+                            #  84*0.86,84*0.86,84*0.86,84*0.86,
+                            #  84*0.86,
+                            #  84*0.45,84*0.45,84*0.45,84*0.45,84*0.45,84*0.45,84*0.45,
+                            #  84*0.16,84*0.16,84*0.16,84*0.16,84*0.16,84*0.16,84*0.16,84*0.16,
+                            #  84*0.16,84*0.16,84*0.16,84*0.16,84*0.16,84*0.16,84*0.16,84*0.16,
+                            #  84*0.16,84*0.16,84*0.16,84*0.16,
+                            #  ]
+            # core_area_list = [refactor,refactor,refactor,refactor,
+                            #   refactor,refactor,refactor,refactor,
+                            #   refactor,
+                            #   refactor,refactor,refactor,refactor,refactor,refactor,refactor,
+                            #   refactor,refactor,refactor,refactor,refactor,refactor,refactor,refactor,
+                            #   refactor,refactor,refactor,refactor,refactor,refactor,refactor,refactor,
+                            #   refactor,refactor,refactor,refactor,
+                            #   ]
+
             corearea = core_area_list[0]
-            refactor = corearea*36/4
+            refactor = corearea*36/16
             totalarea = refactor + 2.08
             area_list = [totalarea, totalarea, totalarea, totalarea,
-                         ]
-            noc_area_list = [2.08,2.08,2.08,2.08,
-                             ]
-            core_area_list = [refactor,refactor,refactor,refactor,
-                              ]
+                         totalarea, totalarea, totalarea, totalarea,
+                         totalarea, totalarea, totalarea, totalarea,
+                         totalarea, totalarea, totalarea, totalarea,]
+            noc_area_list = [2.08, 2.08, 2.08, 2.08, 
+                             2.08, 2.08, 2.08, 2.08,
+                             2.08, 2.08, 2.08, 2.08,
+                             2.08, 2.08, 2.08, 2.08,]
+            core_area_list = [refactor,refactor, refactor, refactor,
+                              refactor, refactor, refactor, refactor,
+                              refactor, refactor, refactor, refactor,
+                              refactor, refactor, refactor, refactor,]
             
             # breakpoint()
             # # 9 core_1area
@@ -146,15 +171,16 @@ class CarbonParamParserStage(Stage):
         
         if is_chiplet:
             # carbon = np.zeros((len(combinations), len(area_list)))
-            carbon = np.zeros((len(combinations), 2))
+            carbon = np.zeros((len(combinations),16))
             for n, comb in enumerate(combinations): 
                 cpa = self.get_carbon_per_area(comb)
                 defect_density = self.get_defect_rate(comb) 
-                yields = []
+                yields = []               
                 wastage_extra_cfp = [] 
                 for i, c in enumerate(comb): 
                     yields.append(self.yield_calc(area_list[i],defect_density[i]))
                     wastage_extra_cfp.append(self.waste_carbon_per_die(diameter=450, chip_area=area_list[i], cpa_factors=cpa[i]))
+                print("yield :", yields)
                 carbon = cpa*np.array(area_list) / yields + wastage_extra_cfp   # in g
                 carbon = ((1-self.rcy_mat_frac)*carbon) + (self.rcy_mat_frac*carbon*self.rcy_cpa_frac)
                 # breakpoint()
@@ -166,7 +192,7 @@ class CarbonParamParserStage(Stage):
                 # breakpoint()
             print("design_carbon: ", design_carbon)
             #total_carbon = carbon.sum(axis=1)
-            carbon = carbon + package_carbon/len(core_id_list)
+            carbon = carbon + package_carbon/len(carbon)
             # carbon = ((1-self.rcy_mat_frac)*carbon) + (self.rcy_mat_frac*carbon*self.rcy_cpa_frac)
             print("carbon afteer:", carbon)
             total_carbon = carbon.sum()

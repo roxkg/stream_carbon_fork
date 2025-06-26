@@ -1,5 +1,6 @@
 from typing import Any
 
+from stream.hardware.architecture.carbonparam import CarbonParam
 from zigzag.stages.parser.workload_parser import WorkloadParserStage as ZigZagWorkloadParserStage
 
 from stream.hardware.architecture.accelerator import Accelerator
@@ -23,16 +24,20 @@ class UserDefinedModelParserStage(ZigZagWorkloadParserStage):
         workload_path: str,
         mapping_path: str,
         accelerator: Accelerator,
+        carbon_param: CarbonParam,
         **kwargs: Any,
     ):
         super().__init__(list_of_callables=list_of_callables, workload=workload_path, mapping=mapping_path, **kwargs)
         self.accelerator = accelerator
+        self.carbon_param = carbon_param
         self.mapping_parser = MappingParser(mapping_path)
 
     def run(self):
         all_mappings = self.mapping_parser.run()
+        # breakpoint()
         workload = self.parse_workload_stream(all_mappings)
         self.kwargs["accelerator"] = self.accelerator
+        self.kwargs["carbon_param"] = self.carbon_param
         sub_stage = self.list_of_callables[0](self.list_of_callables[1:], workload=workload, **self.kwargs)
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info

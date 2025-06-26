@@ -3,7 +3,9 @@ import os
 from typing import Literal
 
 import gurobipy as gp
-from zigzag.utils import pickle_load, pickle_save
+from stream.stages.parsing.user_defined_model_parser import UserDefinedModelParserStage
+from zigzag.utils import pickle_load, pickle_save 
+from stream.utils import save_core_allocation
 
 from stream.cost_model.cost_model import StreamCostModelEvaluation
 from stream.stages.allocation.constraint_optimization_allocation import ConstraintOptimizationAllocationStage
@@ -89,12 +91,14 @@ def optimize_allocation_ga(
     if os.path.exists(scme_path) and skip_if_exists:
         scme = pickle_load(scme_path)
         logger.info(f"Loaded SCME from {scme_path}")
+        save_core_allocation(scme.workload, f"{output_path}/{experiment_id}/mapping.py")
     # Start evaluation from zero
     else:
         mainstage = MainStage(
             [  # Initializes the MainStage as entry point
                 AcceleratorParserStage,  # Parses the accelerator
                 CarbonParamParserStage,
+                # UserDefinedModelParserStage,
                 StreamONNXModelParserStage,  # Parses the ONNX Model into the workload
                 LayerStacksGenerationStage,
                 TilingGenerationStage,

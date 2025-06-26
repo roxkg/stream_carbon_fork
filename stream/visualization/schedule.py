@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 from plotly.express.colors import sample_colorscale
 from zigzag.datatypes import LayerOperand
+from zigzag.cost_model.cost_model import CostModelEvaluation
 
 from stream.utils import CostModelEvaluationLUT
 from stream.workload.computation.computation_node import ComputationNode
@@ -463,6 +464,19 @@ def get_spatial_utilizations(
         return cme.mac_spatial_utilization, cme.mac_utilization1
     return np.nan, np.nan
 
+def get_spatial_mapping(
+    scme: "StreamCostModelEvaluation", node: "ComputationNode", cost_lut: "CostModelEvaluationLUT"
+):
+    if cost_lut:
+        equal_node = cost_lut.get_equal_node(node)
+        assert (
+            equal_node
+        ), f"No equal node for {node} found in CostModelEvaluationLUT. Check LUT path (use the post-CO LUT when using CO)."
+        core = scme.accelerator.get_core(node.chosen_core_allocation)
+        cme = cost_lut.get_cme(equal_node, core)
+        return  (cme.spatial_mapping_int if isinstance(cme, CostModelEvaluation) else np.nan),
+    return np.nan
+
 
 def get_energy_breakdown(
     scme: "StreamCostModelEvaluation", node: "ComputationNode", cost_lut: "CostModelEvaluationLUT"
@@ -509,6 +523,7 @@ def get_dataframe_from_scme(
         start = node.start
         end = node.end
         runtime = node.runtime
+        spatial_mapping = get_spatial_mapping(scme, node, cost_lut)
         su_perfect_temporal, su_nonperfect_temporal = get_spatial_utilizations(scme, node, cost_lut)
         en_total_per_op, en_breakdown_per_op = get_energy_breakdown(scme, node, cost_lut)
         energy = node.onchip_energy
@@ -523,6 +538,7 @@ def get_dataframe_from_scme(
             Resource=f"Core {core_id}",
             Layer=layer,
             Runtime=runtime,
+            SpatialMapping = str(spatial_mapping),
             SpatialUtilization=su_perfect_temporal,
             SpatialUtilizationWithTemporal=su_nonperfect_temporal,
             Tensors=tensors,

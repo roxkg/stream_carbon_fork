@@ -109,11 +109,11 @@ class CarbonEvaluation:
         print(" ")
         """
 
-        """
+        
         carbon_eco = np.loadtxt("carbon_GA102.txt")
         carbon_eco = carbon_eco[:18]
         des_eco = np.loadtxt("des_GA102.txt")
-        des_eco = des_eco[:18]*100/1e5
+        des_eco = des_eco[:18]
         ope_eco = np.loadtxt("ope_GA102.txt")
         ope_eco = ope_eco[:18]
         # tot_eco = np.loadtxt("tot_GA102.txt")
@@ -122,35 +122,37 @@ class CarbonEvaluation:
         combinations = combinations[:18]
         bar_width = 0.3  
         fig, ax = plt.subplots(figsize=(10, 6))
-        des_eco = pd.DataFrame(data=des_eco, index=combinations, columns= (list(self.scme.area_list.keys()) + ["packaging"]))
-        des_self = pd.DataFrame(data=design_carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["packaging"]))
+        # des_eco = pd.DataFrame(data=des_eco, index=combinations, columns= (list(self.scme.area_list.keys()) + ["packaging"]))
+        # des_self = pd.DataFrame(data=design_carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["packaging"]))
+        
+        carbon_eco = pd.DataFrame(data=carbon_eco, index=combinations, columns= (list(self.scme.area_list.keys()) + ["packaging"]))
+        carbon_self = pd.DataFrame(data=carbon[:18], index=combinations, columns=(list(self.scme.area_list.keys()) + ["packaging"]))
+
+        # des_eco.plot(kind='bar', ax=ax, stacked=True, position=1, width = bar_width, align='edge')
+        # des_self.plot(kind='bar', ax=ax, stacked=True, position=0, width = bar_width, align='edge')
+
+        # ax.legend((list(self.scme.area_list.keys()) + ["packaging"]), loc='upper left')
+        # ax.set_xticks(range(len(combinations))) 
+
+        # ax.set_xlabel('node')
+        # ax.set_ylabel('CO2 (g)')
+
+        # for bar in ax.patches:
+        #     bar.set_edgecolor('black')  # 设置边框颜色
+        #     bar.set_linewidth(1)      # 设置边框宽度
+        # plt.xticks(fontsize=10)
+        # plt.yticks(fontsize=10)
         
 
-        des_eco.plot(kind='bar', ax=ax, stacked=True, position=1, width = bar_width, align='edge')
-        des_self.plot(kind='bar', ax=ax, stacked=True, position=0, width = bar_width, align='edge')
-
-        ax.legend((list(self.scme.area_list.keys()) + ["packaging"]), loc='upper left')
-        ax.set_xticks(range(len(combinations))) 
-
-        ax.set_xlabel('node')
-        ax.set_ylabel('CO2 (g)')
-
-        for bar in ax.patches:
-            bar.set_edgecolor('black')  # 设置边框颜色
-            bar.set_linewidth(1)      # 设置边框宽度
-        plt.xticks(fontsize=10)
-        plt.yticks(fontsize=10)
-        """
-
-        """
-        carbon_eco.plot(kind='bar', stacked=True, figsize = (21,7), 
-            title=f'Stacked CO2 manufacturing: GA102')
-        carbon_self.plot(kind='bar', stacked=True, figsize = (21,7), 
-            title=f'Stacked CO2 manufacturing: GA102')
-        """
+        
+        # carbon_eco.plot(kind='bar', stacked=True, figsize = (21,7), 
+        #     title=f'Stacked CO2 manufacturing: GA102')
+        # carbon_self.plot(kind='bar', stacked=True, figsize = (21,7), 
+        #     title=f'Stacked CO2 manufacturing: GA102')
+        
         
         # total_carbon = pd.DataFrame(data=total_carbon, index=combinations, columns=(list(self.scme.area_list.keys()) + ["Packaging"]))
-        """
+        
         op_carbon_1 = op_carbon_1[:18]
         emb_carbon = emb_carbon[:18]
         emb_eco = np.sum(carbon_eco,axis=1) + np.sum(des_eco,axis=1)
@@ -158,7 +160,7 @@ class CarbonEvaluation:
         total_self = pd.DataFrame(data=zip(op_carbon_1,emb_carbon), index=combinations, columns=(["op","emb"]))
         total_eco = pd.DataFrame(data=zip(ope_eco,emb_eco), index=combinations, columns=(["op","emb"]))
         total_eco.plot(kind='bar', ax=ax, stacked=True, position=1, width = bar_width, align='edge')
-        total_self.plot(kind='bar', ax=ax, stacked=True, position=0, width = bar_width, align='edge')
+        # total_self.plot(kind='bar', ax=ax, stacked=True, position=0, width = bar_width, align='edge')
 
         ax.legend((["op","emb"]), loc='upper left')
         ax.set_xticks(range(len(combinations))) 
@@ -174,7 +176,7 @@ class CarbonEvaluation:
         
         
         plt.show()
-        """
+        
         
         
 
@@ -449,7 +451,7 @@ class CarbonEvaluation:
         return design_cfp_total,mfg_cfp_total,eol_cfp_total,ope_cfp_total,app_cfp_total
     
 
-input_data = open_yaml("stream/inputs/testing/carbon_validation/test.yaml")
+input_data = open_yaml("stream/inputs/testing/carbon_validation/GA102.yaml")
 area_dict = {item["type"]: item["area"] for item in input_data["area_list"]}
 
 hardware = CarbonModel(CI_op=input_data["CI_op"], 
